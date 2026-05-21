@@ -35,6 +35,9 @@ axiosInstance.interceptors.response.use(
       switch (status) {
         case 401:
           localStorage.removeItem('token');
+          localStorage.removeItem('export_token');
+          localStorage.removeItem('export_token_expires');
+          localStorage.removeItem('export_token_email');
           window.location.href = '/login';
           toast.error('Session expired. Please login again.');
           break;

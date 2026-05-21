@@ -20,6 +20,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
   setToken: (token: string, email: string, name: string | null = null) => {
     localStorage.setItem('token', token);
     localStorage.setItem('email', email);
+    localStorage.removeItem('export_token');
+    localStorage.removeItem('export_token_expires');
+    localStorage.removeItem('export_token_email');
     if (name) {
       localStorage.setItem('name', name);
     } else {
@@ -41,6 +44,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
     localStorage.removeItem('token');
     localStorage.removeItem('email');
     localStorage.removeItem('name');
+    localStorage.removeItem('export_token');
+    localStorage.removeItem('export_token_expires');
+    localStorage.removeItem('export_token_email');
     set({ token: null, email: null, name: null, isAuthenticated: false });
     window.location.href = '/login';
   },

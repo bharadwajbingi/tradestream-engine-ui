@@ -44,18 +44,22 @@ export default function DownloadPage() {
   const getValidExportToken = (): string | null => {
     const token = localStorage.getItem('export_token');
     const expiresAt = localStorage.getItem('export_token_expires');
-    if (token && expiresAt && Number(expiresAt) > Date.now()) {
+    const tokenEmail = localStorage.getItem('export_token_email');
+    const currentEmail = localStorage.getItem('email');
+    if (token && expiresAt && tokenEmail && tokenEmail === currentEmail && Number(expiresAt) > Date.now()) {
       return token;
     }
     // Remove if expired
     localStorage.removeItem('export_token');
     localStorage.removeItem('export_token_expires');
+    localStorage.removeItem('export_token_email');
     return null;
   };
 
   const saveExportToken = (token: string) => {
     localStorage.setItem('export_token', token);
     localStorage.setItem('export_token_expires', String(Date.now() + 4.5 * 60 * 1000)); // 4.5 minutes safety limit
+    localStorage.setItem('export_token_email', localStorage.getItem('email') || '');
   };
 
   // Entry point for clicking download button
@@ -84,8 +88,7 @@ export default function DownloadPage() {
       setShowOtpDialog(true);
     } catch (err) {
       console.error('Failed to verify export security context', err);
-      toast.error('Failed to authenticate export session. Proceeding under legacy JWT...');
-      executeExport(type, format, null);
+      toast.error('Could not verify export security. Please log in again or retry.');
     }
   };
 
@@ -169,6 +172,11 @@ export default function DownloadPage() {
       toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} ledger exported successfully!`, { id: toastId });
     } catch (error: any) {
       console.error('Export error:', error);
+      if (error.response?.status === 403) {
+        localStorage.removeItem('export_token');
+        localStorage.removeItem('export_token_expires');
+        localStorage.removeItem('export_token_email');
+      }
       toast.error(`Export failed. Verification session may have expired.`, { id: toastId });
     } finally {
       setIsExporting(false);
