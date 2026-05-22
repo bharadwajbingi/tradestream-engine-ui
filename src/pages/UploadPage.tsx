@@ -126,23 +126,45 @@ export default function UploadPage() {
                       <StatusBadge status={file.status} />
                     </div>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>{file.totalRecords} records</span>
+                      <span>{file.totalRecords > 0 ? `${file.totalRecords.toLocaleString()} records` : 'Pending...'}</span>
                       <span>•</span>
                       <span>{format(new Date(file.uploadTime), 'MMM dd, HH:mm')}</span>
+                      {file.processingTimeMs && (
+                        <>
+                          <span>•</span>
+                          <span className="font-mono text-primary/80">Took {(file.processingTimeMs / 1000).toFixed(1)}s</span>
+                        </>
+                      )}
                     </div>
                     <div className="flex items-center gap-4 text-xs mt-2">
                       <span className="text-success">{file.successCount} success</span>
                       <span className="text-error">{file.errorCount} errors</span>
+                      <span className="text-amber-500 font-semibold">{file.duplicateCount || 0} duplicates</span>
                     </div>
 
-                    {/* Live progress bar */}
+                    {/* Dynamic Real-time Progress Bar */}
                     {isLive && (
-                      <div className="mt-2 h-1 bg-primary/20 rounded-full overflow-hidden">
-                        <motion.div
-                          className="h-full bg-primary rounded-full"
-                          animate={{ x: ['-100%', '100%'] }}
-                          transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
-                        />
+                      <div className="mt-3 space-y-1">
+                        <div className="flex justify-between text-[10px] text-muted-foreground">
+                          <span>
+                            {(file.successCount + file.errorCount + (file.duplicateCount || 0)).toLocaleString()} / {file.totalRecords > 0 ? file.totalRecords.toLocaleString() : '...'} records
+                          </span>
+                          <span className="font-semibold text-primary">
+                            {file.totalRecords > 0 ? `${Math.round(((file.successCount + file.errorCount + (file.duplicateCount || 0)) / file.totalRecords) * 100)}%` : '0%'}
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-primary/10 rounded-full overflow-hidden">
+                          <motion.div
+                            className="h-full bg-primary rounded-full"
+                            initial={{ width: '0%' }}
+                            animate={{ 
+                              width: file.totalRecords > 0 
+                                ? `${Math.min(100, Math.round(((file.successCount + file.errorCount + (file.duplicateCount || 0)) / file.totalRecords) * 100))}%` 
+                                : '10%' 
+                            }}
+                            transition={{ duration: 0.8, ease: "easeInOut" }}
+                          />
+                        </div>
                       </div>
                     )}
                   </motion.div>

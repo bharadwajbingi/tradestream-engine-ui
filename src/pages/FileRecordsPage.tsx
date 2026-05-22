@@ -126,6 +126,14 @@ export default function FileRecordsPage() {
       accessor: (row) => <span className="text-sm text-error">{row.errorCount.toLocaleString()}</span>,
     },
     {
+      header: 'Duplicates',
+      accessor: (row) => (
+        <span className="text-sm text-amber-500 font-semibold">
+          {(row.duplicateCount || 0).toLocaleString()}
+        </span>
+      ),
+    },
+    {
       header: 'Upload Time',
       accessor: (row) => (
         <span className="text-sm text-muted-foreground">

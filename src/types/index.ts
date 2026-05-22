@@ -46,7 +46,9 @@ export interface FileLoadMetaData {
   totalRecords: number;
   successCount: number;
   errorCount: number;
+  duplicateCount?: number;
   status: FileStatus;
+  processingTimeMs?: number;
 }
 
 export interface TransactionError {
