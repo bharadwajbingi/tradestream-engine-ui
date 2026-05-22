@@ -26,6 +26,9 @@ export default function DownloadPage() {
   const [endDate, setEndDate] = useState<string>('');
 
   const [pendingExport, setPendingExport] = useState<{ type: 'active' | 'archived'; format: 'csv' } | null>(null);
+  const [showOtpDialog, setShowOtpDialog] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
   useEffect(() => {
     const fetchFiles = async () => {
