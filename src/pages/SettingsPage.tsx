@@ -332,8 +332,8 @@ export default function SettingsPage() {
                   </p>
                   
                   {/* Copy key code */}
-                  <div className="flex gap-2 items-center bg-muted/60 p-2.5 rounded-xl border border-border select-all font-mono text-xs mt-1.5 justify-between max-w-sm">
-                    <span className="font-semibold text-foreground tracking-wide truncate">{setupData.secret}</span>
+                  <div className="flex gap-2 items-center bg-muted/60 p-2.5 rounded-xl border border-border select-all font-mono text-xs mt-1.5 justify-between w-full max-w-sm">
+                    <span className="font-semibold text-foreground tracking-wide break-all select-all select-text">{setupData.secret}</span>
                     <button
                       onClick={handleCopySecret}
                       className="text-muted-foreground hover:text-foreground shrink-0 transition-colors"

@@ -25,11 +25,7 @@ export default function DownloadPage() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
 
-  // 2FA / Export protection state
-  const [showOtpDialog, setShowOtpDialog] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
-  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
-  const [pendingExport, setPendingExport] = useState<{ type: 'active' | 'archived'; format: 'csv' | 'excel' } | null>(null);
+  const [pendingExport, setPendingExport] = useState<{ type: 'active' | 'archived'; format: 'csv' } | null>(null);
 
   useEffect(() => {
     const fetchFiles = async () => {
@@ -44,7 +40,7 @@ export default function DownloadPage() {
   }, []);
 
   // Entry point for clicking download button
-  const triggerExport = async (type: 'active' | 'archived', format: 'csv' | 'excel') => {
+  const triggerExport = async (type: 'active' | 'archived', format: 'csv' = 'csv') => {
     try {
       const statusResponse = await axiosInstance.get('/auth/totp/status');
       const is2faActive = statusResponse.data.data?.enabled || false;
@@ -94,7 +90,7 @@ export default function DownloadPage() {
   };
 
   // Perform actual download logic
-  const executeExport = async (type: 'active' | 'archived', format: 'csv' | 'excel', token: string | null) => {
+  const executeExport = async (type: 'active' | 'archived', format: 'csv', token: string | null) => {
     setIsExporting(true);
     const toastId = toast.loading(`Preparing secure ${type.toUpperCase()} ledger dataset...`);
 
@@ -120,7 +116,7 @@ export default function DownloadPage() {
 
       // Create downloadable Blob
       const blob = new Blob([response.data], {
-        type: response.headers['content-type'] || (format === 'csv' ? 'text/csv' : 'application/vnd.ms-excel'),
+        type: response.headers['content-type'] || 'text/csv',
       });
 
       const url = window.URL.createObjectURL(blob);
@@ -128,7 +124,7 @@ export default function DownloadPage() {
       link.href = url;
 
       const contentDisposition = response.headers['content-disposition'];
-      let filename = `exported_${type}_transactions_${Date.now()}.${format === 'csv' ? 'csv' : 'xls'}`;
+      let filename = `exported_${type}_transactions_${Date.now()}.csv`;
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
         if (filenameMatch && filenameMatch[1]) {
@@ -263,23 +259,14 @@ export default function DownloadPage() {
               <span>Direct secure main table access</span>
             </div>
             
-            <div className="grid grid-cols-2 gap-3">
+            <div className="w-full">
               <Button
                 onClick={() => triggerExport('active', 'csv')}
                 disabled={isExporting}
-                className="flex items-center justify-center gap-1.5 text-xs rounded-xl font-semibold"
+                className="w-full flex items-center justify-center gap-1.5 text-xs rounded-xl font-semibold bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 shadow-md shadow-primary/10"
               >
-                <Download className="h-3.5 w-3.5" />
-                CSV Format
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => triggerExport('active', 'excel')}
-                disabled={isExporting}
-                className="flex items-center justify-center gap-1.5 text-xs rounded-xl hover:bg-background/80 font-semibold"
-              >
-                <FileSpreadsheet className="h-3.5 w-3.5" />
-                Excel (XLS)
+                <Download className="h-3.5 w-3.5 animate-pulse" />
+                Export Ledger (CSV)
               </Button>
             </div>
           </div>
@@ -312,23 +299,14 @@ export default function DownloadPage() {
               <span>Direct secure archive table access</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="w-full">
               <Button
                 onClick={() => triggerExport('archived', 'csv')}
                 disabled={isExporting}
-                className="bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center gap-1.5 text-xs rounded-xl font-semibold border-none"
+                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-600/95 hover:to-indigo-600/95 text-white flex items-center justify-center gap-1.5 text-xs rounded-xl font-semibold border-none shadow-md shadow-purple-500/10"
               >
-                <Download className="h-3.5 w-3.5" />
-                CSV Format
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => triggerExport('archived', 'excel')}
-                disabled={isExporting}
-                className="border-purple-500/30 hover:bg-purple-500/10 text-purple-400 flex items-center justify-center gap-1.5 text-xs rounded-xl font-semibold"
-              >
-                <FileSpreadsheet className="h-3.5 w-3.5" />
-                Excel (XLS)
+                <Download className="h-3.5 w-3.5 animate-pulse" />
+                Export Archive (CSV)
               </Button>
             </div>
           </div>

@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/authStore';
 
 const LoginPage = lazy(() => import('../pages/LoginPage'));
 const OAuth2RedirectHandler = lazy(() => import('../pages/OAuth2RedirectHandler'));
+const LandingPage = lazy(() => import('../pages/LandingPage'));
 const DashboardPage = lazy(() => import('../pages/DashboardPage'));
 const UploadPage = lazy(() => import('../pages/UploadPage'));
 const FileRecordsPage = lazy(() => import('../pages/FileRecordsPage'));
@@ -17,7 +18,7 @@ const DownloadPage = lazy(() => import('../pages/DownloadPage'));
 
 function LoadingFallback() {
   return (
-    <div className="flex items-center justify-center h-screen">
+    <div className="flex items-center justify-center h-screen bg-background">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
     </div>
   );
@@ -38,6 +39,9 @@ export function AppRouter() {
     <BrowserRouter>
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
+          {/* Public Landing Page */}
+          <Route path="/" element={<LandingPage />} />
+
           <Route
             path="/login"
             element={
@@ -59,23 +63,22 @@ export function AppRouter() {
             element={<Navigate to="/login" replace />}
           />
 
+          {/* Protected App Layout & Routes */}
           <Route
-            path="/"
             element={
               <ProtectedRoute>
                 <AppLayout />
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="upload" element={<UploadPage />} />
-            <Route path="files" element={<FileRecordsPage />} />
-            <Route path="errors" element={<ErrorRecordsPage />} />
-            <Route path="errors/:errorId" element={<ErrorDetailsPage />} />
-            <Route path="search" element={<SearchPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="download" element={<DownloadPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/upload" element={<UploadPage />} />
+            <Route path="/files" element={<FileRecordsPage />} />
+            <Route path="/errors" element={<ErrorRecordsPage />} />
+            <Route path="/errors/:errorId" element={<ErrorDetailsPage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/download" element={<DownloadPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -151,10 +151,23 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Prevent accidental text highlight/blue highlight on double-taps for headings, buttons, and graphics */
+  h1, h2, h3, h4, h5, h6, button, a, nav, [role="button"], span, svg, img {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Allow select-all/copy on fields, textareas and pre-selected copyable content */
+  input, textarea, [contenteditable="true"], .select-all, .select-text {
+    -webkit-user-select: text;
+    user-select: text;
   }
 
   button,
