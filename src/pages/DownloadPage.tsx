@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Download, FileSpreadsheet, ShieldCheck, Database, Calendar, Filter, Archive, CheckCircle, Lock, Loader2, Sparkles } from 'lucide-react';
 import { Card } from '../app/components/ui/card';
 import { Button } from '../app/components/ui/button';
@@ -17,6 +18,7 @@ import {
 } from '../app/components/ui/dialog';
 
 export default function DownloadPage() {
+  const navigate = useNavigate();
   const [isExporting, setIsExporting] = useState(false);
   const [files, setFiles] = useState<FileLoadMetaData[]>([]);
   const [selectedFileId, setSelectedFileId] = useState<string>('');
@@ -41,48 +43,20 @@ export default function DownloadPage() {
     fetchFiles();
   }, []);
 
-  const getValidExportToken = (): string | null => {
-    const token = localStorage.getItem('export_token');
-    const expiresAt = localStorage.getItem('export_token_expires');
-    const tokenEmail = localStorage.getItem('export_token_email');
-    const currentEmail = localStorage.getItem('email');
-    if (token && expiresAt && tokenEmail && tokenEmail === currentEmail && Number(expiresAt) > Date.now()) {
-      return token;
-    }
-    // Remove if expired
-    localStorage.removeItem('export_token');
-    localStorage.removeItem('export_token_expires');
-    localStorage.removeItem('export_token_email');
-    return null;
-  };
-
-  const saveExportToken = (token: string) => {
-    localStorage.setItem('export_token', token);
-    localStorage.setItem('export_token_expires', String(Date.now() + 4.5 * 60 * 1000)); // 4.5 minutes safety limit
-    localStorage.setItem('export_token_email', localStorage.getItem('email') || '');
-  };
-
   // Entry point for clicking download button
   const triggerExport = async (type: 'active' | 'archived', format: 'csv' | 'excel') => {
-    // 1. Verify if user is protected by 2FA
     try {
       const statusResponse = await axiosInstance.get('/auth/totp/status');
       const is2faActive = statusResponse.data.data?.enabled || false;
 
       if (!is2faActive) {
-        // Direct download
-        executeExport(type, format, null);
+        // Direct redirect and block download if 2FA has not been registered
+        toast.warning('Two-factor authentication (2FA) is required. Please set up your authenticator app in Settings before downloading transaction ledger files.');
+        navigate('/settings');
         return;
       }
 
-      // 2. 2FA is active, check if we have a valid cached export token
-      const cachedToken = getValidExportToken();
-      if (cachedToken) {
-        executeExport(type, format, cachedToken);
-        return;
-      }
-
-      // 3. Prompt OTP dialog
+      // 2FA is active, always prompt OTP dialog for every single download to enforce absolute audit compliance
       setPendingExport({ type, format });
       setOtpCode('');
       setShowOtpDialog(true);
@@ -105,7 +79,6 @@ export default function DownloadPage() {
       const verifyResponse = await axiosInstance.post('/auth/totp/verify', { code: otpCode });
       const exportToken = verifyResponse.data.data;
       
-      saveExportToken(exportToken);
       setShowOtpDialog(false);
       toast.success('TOTP verification successful! Fetching dataset.', { id: toastId });
 

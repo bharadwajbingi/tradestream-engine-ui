@@ -52,7 +52,12 @@ axiosInstance.interceptors.response.use(
           toast.error(message);
       }
     } else if (error.request) {
-      toast.error("Cannot connect to server");
+      localStorage.removeItem("token");
+      localStorage.removeItem("export_token");
+      localStorage.removeItem("export_token_expires");
+      localStorage.removeItem("export_token_email");
+      window.location.href = "/login";
+      toast.error("Connection lost. Local session terminated.");
     } else {
       toast.error(error.message || "An error occurred");
     }
