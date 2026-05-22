@@ -35,11 +35,11 @@ export function AppLayout() {
       {/* Sidebar Container */}
       <div
         className={cn(
-          "z-50 shrink-0",
+          "z-50 shrink-0 h-full",
           isMobile
             ? "fixed top-0 bottom-0 left-0 transition-transform duration-300 ease-out transform"
             : "relative"
-        )}
+        ) }
         style={{
           transform: isMobile && !isSidebarOpen ? 'translateX(-100%)' : 'translateX(0)'
         }}

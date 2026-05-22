@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
+import { Link } from 'react-router-dom';
 import { Card } from '../app/components/ui/card';
 import { Button } from '../app/components/ui/button';
 import { ShieldCheck, Sparkles } from 'lucide-react';
@@ -42,21 +43,23 @@ export default function LoginPage() {
         <Card className="w-full p-10 rounded-3xl border border-border/80 bg-card/60 backdrop-blur-2xl shadow-2xl relative">
           <div className="mb-8 text-center flex flex-col items-center">
             {/* Animated modern logo container */}
-            <motion.div
-              initial={{ scale: 0.8, rotate: -10 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-              className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-primary-foreground mb-6 shadow-lg shadow-primary/20 relative"
-            >
-              <ShieldCheck className="h-9 w-9 text-white" />
-              <div className="absolute -top-1 -right-1 h-4 w-4 bg-emerald-500 rounded-full border-2 border-card flex items-center justify-center">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              </div>
-            </motion.div>
+            <Link to="/" className="flex flex-col items-center group cursor-pointer">
+              <motion.div
+                initial={{ scale: 0.8, rotate: -10 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
+                className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-primary-foreground mb-6 shadow-lg shadow-primary/20 relative transition-transform duration-300 group-hover:scale-105"
+              >
+                <ShieldCheck className="h-9 w-9 text-white" />
+                <div className="absolute -top-1 -right-1 h-4 w-4 bg-emerald-500 rounded-full border-2 border-card flex items-center justify-center">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                </div>
+              </motion.div>
 
-            <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground bg-clip-text text-transparent">
-              TradeStream Engine
-            </h1>
+              <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground bg-clip-text text-transparent group-hover:text-primary transition-colors">
+                TradeStream Engine
+              </h1>
+            </Link>
             <p className="text-sm text-muted-foreground mt-2 max-w-[280px] leading-relaxed">
               Decentralized high-volume trade processing & transaction integrity suite
             </p>

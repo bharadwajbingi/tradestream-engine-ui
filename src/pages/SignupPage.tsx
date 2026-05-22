@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Card } from '../app/components/ui/card';
 import { Button } from '../app/components/ui/button';
@@ -28,9 +28,9 @@ export default function SignupPage() {
         className="w-full max-w-md"
       >
         <Card className="w-full p-10 rounded-3xl border border-border/80 bg-card/60 backdrop-blur-2xl shadow-2xl relative z-10 text-center flex flex-col items-center">
-          <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 shadow-inner">
+          <Link to="/" className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 shadow-inner transition-transform hover:scale-105 duration-300 cursor-pointer" title="Go to Home">
             <ShieldCheck className="h-8 w-8 animate-pulse" />
-          </div>
+          </Link>
 
           <h2 className="text-2xl font-bold tracking-tight text-foreground mb-3">
             Unified Sign-In Enforced

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Upload, FileText, AlertCircle, Settings, LogOut, Download, Search, X } from 'lucide-react';
+import { LayoutDashboard, Upload, FileText, AlertCircle, Settings, LogOut, Download, Search, X, ShieldCheck } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
 import { useAuthStore } from '../../../store/authStore';
@@ -14,12 +14,19 @@ const navItems = [
 
 export function Sidebar({ onClose }: { onClose?: () => void }) {
   const location = useLocation();
-  const { email, logout } = useAuthStore();
+  const { email, name, logout } = useAuthStore();
 
   return (
-    <aside className="h-screen w-60 bg-sidebar/95 md:bg-sidebar/80 backdrop-blur-xl border-r border-sidebar-border flex flex-col shrink-0">
+    <aside className="h-full w-60 bg-sidebar/95 md:bg-sidebar/80 backdrop-blur-xl border-r border-sidebar-border flex flex-col shrink-0">
       <div className="p-6 flex items-center justify-between">
-        <h1 className="font-semibold text-lg text-sidebar-foreground tracking-tight">TradeStream Engine</h1>
+        <Link to="/" className="flex items-center gap-2.5 group cursor-pointer">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-white shadow-md shadow-primary/20 relative transition-transform duration-300 group-hover:scale-105">
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+          <span className="font-bold text-base tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-foreground/80 bg-clip-text text-transparent group-hover:text-primary transition-colors">
+            TradeStream
+          </span>
+        </Link>
         {onClose && (
           <button
             onClick={onClose}
@@ -71,15 +78,22 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
 
       <div className="p-4 border-t border-sidebar-border">
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-sidebar-accent/40 border border-sidebar-border/60">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white text-sm font-semibold shadow-md">
-            {email?.charAt(0).toUpperCase() || 'U'}
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white text-sm font-semibold shadow-md shrink-0">
+            {(name || email)?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-sidebar-foreground truncate">{email}</p>
+            {name ? (
+              <>
+                <p className="text-xs font-semibold text-sidebar-foreground truncate">{name}</p>
+                <p className="text-[10px] text-sidebar-foreground/60 truncate">{email}</p>
+              </>
+            ) : (
+              <p className="text-xs font-semibold text-sidebar-foreground truncate">{email}</p>
+            )}
           </div>
           <button
             onClick={logout}
-            className="p-1.5 rounded-md hover:bg-sidebar-border transition-colors cursor-pointer text-sidebar-foreground"
+            className="p-1.5 rounded-md hover:bg-sidebar-border transition-colors cursor-pointer text-sidebar-foreground shrink-0"
             title="Logout"
           >
             <LogOut className="h-4 w-4" />
