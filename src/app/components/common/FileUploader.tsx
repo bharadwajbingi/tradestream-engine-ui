@@ -5,7 +5,7 @@ import { cn } from '../../../lib/utils';
 import { Progress } from '../ui/progress';
 
 interface FileUploaderProps {
-  onUpload: (file: File) => Promise<void>;
+  onUpload: (file: File, onProgress?: (progressEvent: any) => void) => Promise<void>;
   accept?: string;
 }
 
@@ -51,19 +51,20 @@ export function FileUploader({ onUpload, accept = '.csv' }: FileUploaderProps) {
     setStatus('idle');
     setErrorMessage('');
 
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => Math.min(prev + 10, 90));
-    }, 200);
-
     try {
-      await onUpload(uploadFile);
+      await onUpload(uploadFile, (progressEvent) => {
+        if (progressEvent.total) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          // Only show up to 99% until the server actually responds with success
+          setProgress(percentCompleted === 100 ? 99 : percentCompleted);
+        }
+      });
       setProgress(100);
       setStatus('success');
     } catch (error) {
       setStatus('error');
       setErrorMessage(error instanceof Error ? error.message : 'Upload failed');
     } finally {
-      clearInterval(progressInterval);
       setIsUploading(false);
     }
   };

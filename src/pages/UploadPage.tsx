@@ -53,8 +53,8 @@ export default function UploadPage() {
     : [];
   const recentFiles = sortedFiles.slice(0, 5);
 
-  const handleUpload = async (file: File) => {
-    await fileService.uploadFile(file);
+  const handleUpload = async (file: File, onProgress?: (progressEvent: any) => void) => {
+    await fileService.uploadFile(file, onProgress);
     queryClient.invalidateQueries({ queryKey: ['files'] });
     queryClient.invalidateQueries({ queryKey: ['metrics'] });
   };

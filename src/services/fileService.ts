@@ -10,7 +10,7 @@ import {
 } from '../types';
 
 export const fileService = {
-  async uploadFile(file: File): Promise<FileUploadResponse> {
+  async uploadFile(file: File, onUploadProgress?: (progressEvent: any) => void): Promise<FileUploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -21,6 +21,7 @@ export const fileService = {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        onUploadProgress,
       }
     );
     return response.data.data;
