@@ -6,7 +6,7 @@ import { Button } from '../app/components/ui/button';
 import { ShieldCheck, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
 
 const cardVariants = {
   initial: { opacity: 0, y: 30 },
