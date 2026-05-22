@@ -1,4 +1,4 @@
-import { LayoutDashboard, Upload, FileText, AlertCircle, Settings, LogOut, Download, Search } from 'lucide-react';
+import { LayoutDashboard, Upload, FileText, AlertCircle, Settings, LogOut, Download, Search, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
 import { useAuthStore } from '../../../store/authStore';
@@ -12,14 +12,23 @@ const navItems = [
   { icon: Download, label: 'Download Data', path: '/download' },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onClose }: { onClose?: () => void }) {
   const location = useLocation();
   const { email, logout } = useAuthStore();
 
   return (
-    <aside className="h-screen w-60 bg-sidebar/80 backdrop-blur-xl border-r border-sidebar-border flex flex-col shrink-0">
-      <div className="p-6">
-        <h1 className="font-semibold text-lg text-sidebar-foreground">TradeStream Engine</h1>
+    <aside className="h-screen w-60 bg-sidebar/95 md:bg-sidebar/80 backdrop-blur-xl border-r border-sidebar-border flex flex-col shrink-0">
+      <div className="p-6 flex items-center justify-between">
+        <h1 className="font-semibold text-lg text-sidebar-foreground tracking-tight">TradeStream Engine</h1>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="md:hidden p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground transition-colors cursor-pointer"
+            title="Close Sidebar"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       <nav className="flex-1 px-3 space-y-1">
@@ -29,10 +38,11 @@ export function Sidebar() {
             <Link
               key={item.path}
               to={item.path}
+              onClick={onClose}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer',
                 isActive
-                  ? 'bg-sidebar-primary text-sidebar-primary-foreground border-l-2 border-sidebar-primary'
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm shadow-primary/10'
                   : 'text-sidebar-foreground hover:bg-sidebar-accent'
               )}
             >
@@ -46,10 +56,11 @@ export function Sidebar() {
 
         <Link
           to="/settings"
+          onClick={onClose}
           className={cn(
-            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
+            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer',
             location.pathname === '/settings'
-              ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+              ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm shadow-primary/10'
               : 'text-sidebar-foreground hover:bg-sidebar-accent'
           )}
         >
@@ -59,22 +70,23 @@ export function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-sidebar-border">
-        <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-sidebar-accent">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white text-sm font-medium">
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-sidebar-accent/40 border border-sidebar-border/60">
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white text-sm font-semibold shadow-md">
             {email?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">{email}</p>
+            <p className="text-xs font-semibold text-sidebar-foreground truncate">{email}</p>
           </div>
           <button
             onClick={logout}
-            className="p-1.5 rounded-md hover:bg-sidebar-border transition-colors"
+            className="p-1.5 rounded-md hover:bg-sidebar-border transition-colors cursor-pointer text-sidebar-foreground"
             title="Logout"
           >
-            <LogOut className="h-4 w-4 text-sidebar-foreground" />
+            <LogOut className="h-4 w-4" />
           </button>
         </div>
       </div>
     </aside>
   );
 }
+

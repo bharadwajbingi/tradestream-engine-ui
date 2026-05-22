@@ -22,6 +22,13 @@ export default function SettingsPage() {
   const [userName, setUserName] = useState(storeName || '');
   const [isSavingName, setIsSavingName] = useState(false);
   
+  // Sync name local state when storeName updates from localstorage/API
+  useEffect(() => {
+    if (storeName) {
+      setUserName((current) => current || storeName);
+    }
+  }, [storeName]);
+  
   // TOTP States
   const [isTotpEnabled, setIsTotpEnabled] = useState(false);
   const [totpStep, setTotpStep] = useState<'loading' | 'disabled' | 'setup' | 'enabled' | 'disable_confirm'>('loading');
@@ -32,7 +39,17 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem('theme') as 'light' | 'dark' | 'system' | null;
-    setTheme(stored || 'dark');
+    const initialTheme = stored || 'dark';
+    setTheme(initialTheme);
+
+    // Apply exact class alignment to document node to avoid plain white flashes on mount
+    if (initialTheme === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle('dark', prefersDark);
+    } else {
+      document.documentElement.classList.toggle('dark', initialTheme === 'dark');
+    }
+
     fetchTotpStatus();
     fetchUserProfile();
   }, []);
@@ -85,7 +102,7 @@ export default function SettingsPage() {
     setIsProcessing(true);
     const toastId = toast.loading('Initiating 2FA Setup...');
     try {
-      const response = await axiosInstance.get('/auth/totp/setup');
+      const response = await axiosInstance.post('/auth/totp/setup');
       setSetupData(response.data.data);
       setTotpStep('setup');
       setVerificationCode('');
