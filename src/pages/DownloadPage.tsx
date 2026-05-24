@@ -44,6 +44,11 @@ export default function DownloadPage() {
 
   // Entry point for clicking download button
   const triggerExport = async (type: 'active' | 'archived', format: 'csv' = 'csv') => {
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      toast.error('Start date cannot be greater than end date');
+      return;
+    }
+
     try {
       const statusResponse = await axiosInstance.get('/auth/totp/status');
       const is2faActive = statusResponse.data.data?.enabled || false;
@@ -95,7 +100,7 @@ export default function DownloadPage() {
   // Perform actual download logic
   const executeExport = async (type: 'active' | 'archived', format: 'csv', token: string | null) => {
     setIsExporting(true);
-    const toastId = toast.loading(`Preparing secure ${type.toUpperCase()} ledger dataset...`);
+    const toastId = toast.loading(`Initiating secure ${type.toUpperCase()} ledger dataset generation...`);
 
     try {
       const params: any = { format };
@@ -108,40 +113,55 @@ export default function DownloadPage() {
         headers['X-Export-Token'] = token;
       }
 
-      // Corrected API routes to match spring boot controllers
+      // Start the job
       const endpoint = type === 'active' ? '/transactions/export' : '/transactions/archive/export';
-
-      const response = await axiosInstance.get(endpoint, {
-        params,
-        headers,
-        responseType: 'blob',
-      });
-
-      // Create downloadable Blob
-      const blob = new Blob([response.data], {
-        type: response.headers['content-type'] || 'text/csv',
-      });
-
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-
-      const contentDisposition = response.headers['content-disposition'];
-      let filename = `exported_${type}_transactions_${Date.now()}.csv`;
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
-        if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1];
-        }
+      const response = await axiosInstance.get(endpoint, { params, headers });
+      
+      const jobId = response.data?.jobId || response.data?.data?.jobId;
+      if (!jobId) {
+        throw new Error('No Job ID returned from server');
       }
 
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      toast.loading('Export job submitted. Generating CSV in the background...', { id: toastId });
 
-      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} ledger exported successfully!`, { id: toastId });
+      // Poll for status
+      const pollInterval = setInterval(async () => {
+        try {
+          const statusRes = await axiosInstance.get(`/transactions/export/status/${jobId}`, { headers });
+          const statusData = statusRes.data;
+
+          if (statusData.status === 'COMPLETED') {
+            clearInterval(pollInterval);
+            setIsExporting(false);
+            setPendingExport(null);
+            toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} ledger exported successfully! Check your downloads.`, { id: toastId });
+            
+            // Trigger download via presigned URL
+            if (statusData.downloadUrl) {
+              const link = document.createElement('a');
+              link.href = statusData.downloadUrl;
+              link.setAttribute('target', '_blank');
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+            }
+          } else if (statusData.status === 'FAILED') {
+            clearInterval(pollInterval);
+            setIsExporting(false);
+            setPendingExport(null);
+            toast.error(`Export failed: ${statusData.error || 'Unknown error'}`, { id: toastId });
+          } else {
+            // Still processing
+            toast.loading(`Job Processing... Please wait.`, { id: toastId });
+          }
+        } catch (pollErr) {
+          clearInterval(pollInterval);
+          setIsExporting(false);
+          setPendingExport(null);
+          toast.error('Error checking job status', { id: toastId });
+        }
+      }, 5000);
+
     } catch (error: any) {
       console.error('Export error:', error);
       if (error.response?.status === 403) {
@@ -150,7 +170,6 @@ export default function DownloadPage() {
         localStorage.removeItem('export_token_email');
       }
       toast.error(`Export failed. Verification session may have expired.`, { id: toastId });
-    } finally {
       setIsExporting(false);
       setPendingExport(null);
     }
@@ -182,6 +201,7 @@ export default function DownloadPage() {
             <input
               type="date"
               value={startDate}
+              max={endDate || undefined}
               onChange={(e) => setStartDate(e.target.value)}
               className="w-full bg-background/50 border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all duration-200"
             />
@@ -193,6 +213,7 @@ export default function DownloadPage() {
             <input
               type="date"
               value={endDate}
+              min={startDate || undefined}
               onChange={(e) => setEndDate(e.target.value)}
               className="w-full bg-background/50 border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all duration-200"
             />
