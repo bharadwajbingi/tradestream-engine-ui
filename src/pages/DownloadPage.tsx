@@ -346,6 +346,11 @@ export default function DownloadPage() {
               maxLength={6}
               value={otpCode}
               onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && otpCode.length === 6 && !isVerifyingOtp) {
+                  handleVerifyOtpAndProceed();
+                }
+              }}
               placeholder="000000"
               className="text-center font-mono tracking-[0.75em] pl-[0.75em] text-2xl h-12 bg-background/50 border border-border rounded-xl max-w-[200px]"
             />
