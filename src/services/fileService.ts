@@ -106,7 +106,7 @@ export const fileService = {
   },
 
   async exportFileTransactions(fileId: number): Promise<any> {
-    const response = await axiosInstance.get(`/transactions/export?fileId=${fileId}&format=csv`, {
+    const response = await axiosInstance.get(`/file/download/${fileId}`, {
       responseType: 'blob',
     });
     return response.data;

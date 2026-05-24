@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AppLayout } from '../app/components/layout/AppLayout';
+import { DocsLayout } from '../app/components/layout/DocsLayout';
 import { useAuthStore } from '../store/authStore';
 
 const LoginPage = lazy(() => import('../pages/LoginPage'));
@@ -15,6 +16,8 @@ const ErrorDetailsPage = lazy(() => import('../pages/ErrorDetailsPage'));
 const SearchPage = lazy(() => import('../pages/SearchPage'));
 const SettingsPage = lazy(() => import('../pages/SettingsPage'));
 const DownloadPage = lazy(() => import('../pages/DownloadPage'));
+const ApiDocsPage = lazy(() => import('../pages/ApiDocsPage'));
+const UserGuidePage = lazy(() => import('../pages/UserGuidePage'));
 
 function LoadingFallback() {
   return (
@@ -28,7 +31,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
@@ -62,6 +65,13 @@ export function AppRouter() {
             path="/signup"
             element={<Navigate to="/login" replace />}
           />
+
+          {/* Public Documentation Routes under a shared layout */}
+          <Route element={<DocsLayout />}>
+            <Route path="/docs" element={<Navigate to="/docs/user-guide" replace />} />
+            <Route path="/docs/user-guide" element={<UserGuidePage />} />
+            <Route path="/docs/api" element={<ApiDocsPage />} />
+          </Route>
 
           {/* Protected App Layout & Routes */}
           <Route

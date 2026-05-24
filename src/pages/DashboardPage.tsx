@@ -37,11 +37,17 @@ export default function DashboardPage() {
     ?.slice()
     .sort((a, b) => new Date(a.uploadTime).getTime() - new Date(b.uploadTime).getTime())
     .map((file) => ({
-      date: format(new Date(file.uploadTime), 'MMM dd'),
+      date: format(new Date(file.uploadTime), 'MMM dd, HH:mm'),
       success: file.successCount,
       error: file.errorCount,
     }))
     .slice(-7) || [];
+
+  const formatYAxisTick = (val: number) => {
+    if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+    if (val >= 1_000) return `${(val / 1_000).toFixed(1).replace(/\.0$/, '')}K`;
+    return val.toString();
+  };
 
   const statusData = [
     { name: 'Completed', value: files?.filter((f) => f.status === 'COMPLETED').length || 0, color: '#10B981' },
@@ -147,9 +153,9 @@ export default function DashboardPage() {
                     <stop offset="95%" stopColor="#F43F5E" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="date" tick={{ fill: 'var(--text-muted)' }} />
-                <YAxis tick={{ fill: 'var(--text-muted)' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.5} />
+                <XAxis dataKey="date" tick={{ fill: 'var(--text-muted)' }} fontSize={11} />
+                <YAxis tick={{ fill: 'var(--text-muted)' }} width={80} tickFormatter={formatYAxisTick} fontSize={11} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'var(--bg-surface)',
@@ -157,8 +163,8 @@ export default function DashboardPage() {
                     borderRadius: '8px',
                   }}
                 />
-                <Area type="monotone" dataKey="success" stroke="#10B981" fill="url(#successGradient)" />
-                <Area type="monotone" dataKey="error" stroke="#F43F5E" fill="url(#errorGradient)" />
+                <Area type="monotone" dataKey="success" stroke="#10B981" fill="url(#successGradient)" strokeWidth={2} />
+                <Area type="monotone" dataKey="error" stroke="#F43F5E" fill="url(#errorGradient)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </Card>
@@ -195,7 +201,7 @@ export default function DashboardPage() {
               {statusData.map((item, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span className="text-xs text-muted-foreground">{item.name}: {item.value}</span>
+                  <span className="text-xs text-muted-foreground">{item.name}: {item.value.toLocaleString()}</span>
                 </div>
               ))}
             </div>

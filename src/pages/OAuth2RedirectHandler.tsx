@@ -32,7 +32,7 @@ export default function OAuth2RedirectHandler() {
         
         // Brief delay for transition animation
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/');
         }, 1500);
       } catch (err) {
         console.error('Failed to parse OAuth2 token', err);

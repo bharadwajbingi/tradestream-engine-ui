@@ -2,16 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  ShieldCheck, Sparkles, ArrowRight, Play, CheckCircle2, XCircle, 
-  Cpu, Layers, Lock, FileSpreadsheet, RefreshCw, ChevronRight, Menu, X, HelpCircle
+  ShieldCheck, ArrowRight, BookOpen, Terminal, 
+  Layers, ChevronRight, Menu, X, LayoutDashboard 
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../app/components/ui/button';
 import { Card } from '../app/components/ui/card';
 import { ThemeToggle } from '../app/components/common/ThemeToggle';
-import { 
-  Accordion, AccordionContent, AccordionItem, AccordionTrigger 
-} from '../app/components/ui/accordion';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -19,12 +16,6 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // Simulator state
-  const [simStatus, setSimStatus] = useState<'idle' | 'parsing' | 'completed'>('idle');
-  const [simProgress, setSimProgress] = useState(0);
-  const [simLog, setSimLog] = useState('');
-
-  // Watch scroll to shadow-glaze navbar
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -33,70 +24,17 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Run Spreadsheet Ingest Simulator animation
-  const handleStartSim = () => {
-    if (simStatus === 'parsing') return;
-    setSimStatus('parsing');
-    setSimProgress(0);
-    setSimLog('Reading spreadsheet rows...');
-
-    const logs = [
-      'Reading spreadsheet rows...',
-      'Mapping transaction headers...',
-      'Applying validation schema rules...',
-      'Validating currency and rates...',
-      'Flagging structural anomalies...',
-      'Building ledger response tables...',
-      'Finalizing cryptographic audit seal...'
-    ];
-
-    let currentLogIndex = 0;
-    const interval = setInterval(() => {
-      setSimProgress((prev) => {
-        const next = prev + 5;
-        // Update logs dynamically as progress advances
-        const logIndex = Math.min(
-          Math.floor((next / 100) * logs.length),
-          logs.length - 1
-        );
-        if (logIndex !== currentLogIndex) {
-          currentLogIndex = logIndex;
-          setSimLog(logs[logIndex]);
-        }
-
-        if (next >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setSimStatus('completed');
-          }, 300);
-          return 100;
-        }
-        return next;
-      });
-    }, 100);
-  };
-
-  const handleResetSim = () => {
-    setSimStatus('idle');
-    setSimProgress(0);
-    setSimLog('');
-  };
-
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300 relative overflow-x-hidden select-none">
       
       {/* Dynamic Background Glows */}
-      <div className="absolute top-0 inset-x-0 h-[600px] bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none -z-10" />
-      <div className="absolute top-[250px] -left-[10%] w-[35%] h-[30%] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse" style={{ animationDuration: '6s' }} />
-      <div className="absolute top-[400px] -right-[10%] w-[30%] h-[25%] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse" style={{ animationDuration: '8s' }} />
+      <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none -z-10" />
+      <div className="absolute top-[200px] -left-[10%] w-[35%] h-[30%] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none -z-10" />
+      <div className="absolute top-[300px] -right-[10%] w-[30%] h-[25%] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
 
       {/* Brand Header / Navbar */}
-      <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-        scrolled 
-          ? 'bg-background/80 backdrop-blur-xl border-b border-border/80 shadow-sm py-3' 
-          : 'bg-transparent py-5'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <header className="fixed top-0 inset-x-0 z-50 h-14 bg-background/95 backdrop-blur-xl border-b border-border/80 shadow-sm flex items-center shrink-0">
+        <div className="w-full flex items-center justify-between px-4 md:px-6">
           {/* Logo */}
           <Link 
             to="/" 
@@ -106,39 +44,64 @@ export default function LandingPage() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             }}
-            className="flex items-center gap-2.5 group"
+            className="flex items-center gap-2 group shrink-0"
           >
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-white shadow-md shadow-primary/20 relative transition-transform duration-300 group-hover:scale-105">
-              <ShieldCheck className="h-6 w-6" />
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-white shadow-md shadow-primary/20 transition-transform duration-200 group-hover:scale-105">
+              <ShieldCheck className="h-4.5 w-4.5" />
             </div>
-            <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-foreground/80 bg-clip-text text-transparent group-hover:text-primary transition-colors">
-              TradeStream
-            </span>
+            <span className="font-bold text-base tracking-tight hidden sm:block">TradeStream</span>
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</a>
-            <a href="#process" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
-            <a href="#security" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Security</a>
-            <a href="#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
+          <nav className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+            <Link
+              to="/docs/user-guide"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all"
+            >
+              <BookOpen className="h-4 w-4" />
+              User Guide
+            </Link>
+            <Link
+              to="/docs/api"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all"
+            >
+              <Terminal className="h-4 w-4" />
+              API Portal
+            </Link>
+            <a
+              href="#process"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('process')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all"
+            >
+              <Layers className="h-4 w-4" />
+              How It Works
+            </a>
           </nav>
 
           {/* Desktop Action Buttons */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-2">
             <ThemeToggle />
             {isAuthenticated ? (
-              <Button 
+              <Button
                 onClick={() => navigate('/dashboard')}
-                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 text-white shadow-md shadow-primary/10 rounded-xl font-semibold px-5"
+                size="sm"
+                className="h-8 px-3 bg-gradient-to-r from-primary to-purple-600 text-white text-xs font-semibold rounded-lg shadow-sm shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-px transition-all"
               >
-                Go to Dashboard
-                <ArrowRight className="h-4 w-4 ml-1.5" />
+                <LayoutDashboard className="h-3.5 w-3.5 mr-1.5" />
+                Dashboard
               </Button>
             ) : (
-              <Link to="/login" className="text-sm font-semibold hover:text-primary transition-colors px-4 py-2 rounded-xl bg-muted/40 hover:bg-muted/80 transition-all">
+              <Button
+                onClick={() => navigate('/login')}
+                size="sm"
+                className="h-8 px-3 bg-gradient-to-r from-primary to-purple-600 text-white text-xs font-semibold rounded-lg shadow-sm shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-px transition-all"
+              >
                 Sign In
-              </Link>
+                <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+              </Button>
             )}
           </div>
 
@@ -149,7 +112,7 @@ export default function LandingPage() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground focus:outline-none"
             >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
@@ -161,36 +124,33 @@ export default function LandingPage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-b border-border bg-background/95 backdrop-blur-xl"
+              className="absolute top-14 inset-x-0 z-50 md:hidden border-b border-border bg-background/95 backdrop-blur-xl"
             >
               <div className="px-4 pt-2 pb-6 space-y-4 flex flex-col">
-                <a 
-                  href="#features" 
+                <Link 
+                  to="/docs/user-guide" 
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-base font-semibold text-muted-foreground hover:text-foreground py-2 border-b border-border/40"
                 >
-                  Features
-                </a>
+                  User Guide
+                </Link>
+                <Link 
+                  to="/docs/api" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-base font-semibold text-muted-foreground hover:text-foreground py-2 border-b border-border/40"
+                >
+                  API Portal
+                </Link>
                 <a 
                   href="#process" 
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={(e) => {
+                    setMobileMenuOpen(false);
+                    e.preventDefault();
+                    document.getElementById('process')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
                   className="text-base font-semibold text-muted-foreground hover:text-foreground py-2 border-b border-border/40"
                 >
                   How It Works
-                </a>
-                <a 
-                  href="#security" 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-base font-semibold text-muted-foreground hover:text-foreground py-2 border-b border-border/40"
-                >
-                  Security
-                </a>
-                <a 
-                  href="#faq" 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-base font-semibold text-muted-foreground hover:text-foreground py-2 border-b border-border/40"
-                >
-                  FAQ
                 </a>
                 <div className="pt-2 flex flex-col gap-3">
                   {isAuthenticated ? (
@@ -222,252 +182,105 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 md:pt-40 md:pb-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-            {/* Left Content */}
-            <div className="lg:col-span-6 space-y-6 md:space-y-8 text-center lg:text-left flex flex-col items-center lg:items-start">
-              
-              {/* Compliance Pill */}
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-semibold tracking-wide animate-pulse">
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Now with Bank-Grade TOTP Protection</span>
-              </div>
-
-              {/* Title */}
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.1] max-w-xl lg:max-w-none">
-                Streamline and Secure Your{' '}
-                <span className="bg-gradient-to-r from-primary via-indigo-500 to-purple-600 bg-clip-text text-transparent">
-                  Trade Ledger Ingestion
-                </span>
-              </h1>
-
-              {/* Tagline */}
-              <p className="text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed">
-                Process million-row CSV ledgers in seconds. TSE ingests financial ledgers, isolates critical compliance errors, and secures downloadable data blocks with dual-layered Google Authenticator 2FA.
-              </p>
-
-              {/* CTAs */}
-              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-center">
-                <Button
-                  onClick={() => navigate(isAuthenticated ? '/dashboard' : '/login')}
-                  className="h-12 w-full sm:w-auto px-8 rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 text-white font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/35 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden group/btn"
-                >
-                  <span>{isAuthenticated ? 'Go to Dashboard' : 'Get Started'}</span>
-                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
-                </Button>
-                <a href="#features" className="w-full sm:w-auto">
-                  <Button
-                    variant="outline"
-                    className="h-12 w-full sm:w-auto px-8 rounded-xl font-semibold flex items-center justify-center gap-2 border-border/80 hover:bg-muted/40 hover:border-primary/30 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0"
-                  >
-                    <Play className="h-3.5 w-3.5 text-primary animate-pulse" />
-                    <span>Explore Platform Demo</span>
-                  </Button>
-                </a>
-              </div>
-            </div>
-
-            {/* Right Interactive Simulator Card */}
-            <div className="lg:col-span-6 flex justify-center w-full">
-              <motion.div 
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
-                className="w-full max-w-lg relative"
-              >
-                {/* Glowing border container */}
-                <div className="absolute -inset-1.5 bg-gradient-to-r from-primary to-purple-600 rounded-3xl blur-xl opacity-20" />
-                
-                <Card className="w-full p-6 sm:p-8 rounded-3xl border border-border/80 bg-card/60 backdrop-blur-2xl shadow-2xl relative select-none">
-                  {/* Mock Window Bar */}
-                  <div className="flex items-center justify-between pb-5 border-b border-border/60 mb-6">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 bg-red-500/80 rounded-full" />
-                      <div className="h-3 w-3 bg-amber-500/80 rounded-full" />
-                      <div className="h-3 w-3 bg-emerald-500/80 rounded-full" />
-                      <span className="text-[11px] text-muted-foreground font-mono ml-2 font-medium">stream_ingestion_portal.sh</span>
-                    </div>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary font-semibold font-mono">
-                      v2.4.0
-                    </span>
-                  </div>
-
-                  {/* Simulator Screen Area */}
-                  <div className="space-y-6">
-                    
-                    {simStatus === 'idle' && (
-                      <div className="flex flex-col items-center justify-center border-2 border-dashed border-border/60 hover:border-primary/50 transition-colors py-10 px-4 rounded-2xl bg-muted/20 cursor-pointer" onClick={handleStartSim}>
-                        <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4">
-                          <FileSpreadsheet className="h-6 w-6" />
-                        </div>
-                        <h4 className="text-sm font-semibold mb-1">trade_ledger_may_2026.csv</h4>
-                        <p className="text-xs text-muted-foreground text-center max-w-xs">
-                          File contains 4,132 transaction rows. Click below to simulate high-velocity stream processing.
-                        </p>
-                        <Button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleStartSim();
-                          }}
-                          className="mt-5 h-9 text-xs font-semibold rounded-lg"
-                        >
-                          Run Sample Parse
-                        </Button>
-                      </div>
-                    )}
-
-                    {simStatus === 'parsing' && (
-                      <div className="space-y-6 py-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <RefreshCw className="h-4.5 w-4.5 text-primary animate-spin" />
-                            <span className="text-xs font-semibold font-mono text-primary">INGESTING DATASTREAM...</span>
-                          </div>
-                          <span className="text-xs font-bold font-mono">{simProgress}%</span>
-                        </div>
-
-                        {/* Progress Bar Container */}
-                        <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-primary to-purple-500 transition-all duration-100 ease-out" 
-                            style={{ width: `${simProgress}%` }}
-                          />
-                        </div>
-
-                        {/* Dynamic Log message */}
-                        <div className="bg-muted/40 border border-border/50 rounded-xl p-3.5 min-h-[50px] flex items-center justify-center text-center">
-                          <span className="text-xs font-mono text-muted-foreground animate-pulse">
-                            &gt; {simLog}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {simStatus === 'completed' && (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="space-y-6"
-                      >
-                        <div className="flex items-center gap-2 justify-center text-emerald-400 text-sm font-semibold">
-                          <CheckCircle2 className="h-5 w-5" />
-                          <span>Stream Ledger Purified Successfully</span>
-                        </div>
-
-                        {/* Counters Block */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4 text-center">
-                            <span className="text-2xl font-extrabold text-emerald-400 font-mono">4,120</span>
-                            <p className="text-[10px] text-muted-foreground font-semibold mt-1 uppercase tracking-wider">Processed (Success)</p>
-                          </div>
-                          <div className="bg-rose-500/5 border border-rose-500/10 rounded-2xl p-4 text-center">
-                            <span className="text-2xl font-extrabold text-rose-400 font-mono">12</span>
-                            <p className="text-[10px] text-muted-foreground font-semibold mt-1 uppercase tracking-wider">Flagged (Errors)</p>
-                          </div>
-                        </div>
-
-                        {/* Security notice inside simulator */}
-                        <div className="flex gap-3 items-start bg-muted/40 p-3.5 rounded-xl border border-border/40 text-xs">
-                          <Lock className="h-4.5 w-4.5 text-primary shrink-0 mt-0.5" />
-                          <div className="space-y-0.5">
-                            <p className="font-semibold text-foreground">Ledger Authenticator Lock Enabled</p>
-                            <p className="text-[11px] text-muted-foreground">
-                              Final databases and error logs are sealed. Export requests strictly require Google Authenticator 2FA tokens.
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2 justify-center pt-2">
-                          <Button 
-                            onClick={handleResetSim}
-                            variant="ghost"
-                            className="h-9 text-xs rounded-lg"
-                          >
-                            Reset Portal
-                          </Button>
-                          <Button 
-                            onClick={() => navigate('/login')}
-                            className="h-9 text-xs rounded-lg bg-gradient-to-r from-primary to-purple-600 font-semibold text-white"
-                          >
-                            Access Full Portal
-                          </Button>
-                        </div>
-                      </motion.div>
-                    )}
-
-                  </div>
-                </Card>
-              </motion.div>
-            </div>
+      <section className="pt-32 pb-12 md:pt-40 md:pb-16 text-center max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="space-y-6 flex flex-col items-center">
+          
+          {/* Welcome Pill */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-semibold tracking-wide">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            <span>High-Performance Ingestion Portal</span>
           </div>
+
+          {/* Title */}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.15]">
+            TradeStream Engine{' '}
+            <span className="bg-gradient-to-r from-primary via-indigo-500 to-purple-600 bg-clip-text text-transparent block mt-1">
+              Developer & Operations Portal
+            </span>
+          </h1>
+
+          {/* Tagline */}
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl leading-relaxed">
+            Process high-volume financial trade dumps with robust validation checks, dynamic error quarantine pipelines, and bank-grade TOTP multi-factor security locks.
+          </p>
+
         </div>
       </section>
 
-      {/* Feature Showcase Matrix Grid */}
-      <section id="features" className="py-20 border-y border-border/40 bg-muted/10 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3.5">
-            <span className="text-[11px] font-bold tracking-widest text-primary uppercase">Powerful Capabilities</span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-              Designed for High-Volume Compliance
+      {/* Documentation Hub Section - Side by Side Docs */}
+      <section id="doc-hub" className="py-16 border-t border-border/40 bg-muted/10 relative">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
+            <span className="text-[11px] font-bold tracking-widest text-primary uppercase">Unified Resource Center</span>
+            <h2 className="text-3xl font-extrabold tracking-tight">
+              Platform Documentation Hub
             </h2>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              TradeStream is optimized to process volatile spreadsheet transaction dumps, maintaining perfect audit controls.
+            <p className="text-sm text-muted-foreground">
+              Select a resource below to access business-facing upload guides or technical integration specifications.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
             
-            {/* Feature 1 */}
-            <Card className="p-6 rounded-2xl border border-border/80 bg-card/40 backdrop-blur-md hover:border-primary/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
-              <div className="space-y-4">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
-                  <Cpu className="h-5.5 w-5.5" />
+            {/* Card 1: Client / Operations User Guide */}
+            <Card className="p-8 rounded-3xl border border-border bg-card/65 backdrop-blur-md hover:border-primary/45 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group text-left">
+              <div className="space-y-5">
+                <div className="h-12 w-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
+                  <BookOpen className="h-6 w-6" />
                 </div>
-                <h3 className="font-bold text-base">Stream Ingestion</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  High-speed chunk-based parsing validates millions of raw CSV transaction rows with zero CPU thread blockage.
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-foreground">Client Operations User Guide</h3>
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">For Business & Ledger Administrators</p>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Understand how to format, prepare, and upload CSV spreadsheets. Check validation rules across the 21 financial fields, simulate ingestion rows, and download compliant file templates.
                 </p>
+                <ul className="space-y-2 text-xs text-muted-foreground font-mono bg-muted/30 p-4 rounded-2xl border border-border/40">
+                  <li className="flex items-center gap-2">↳ 21 Columns Ingestion Reference</li>
+                  <li className="flex items-center gap-2">↳ Interactive CSV Sandbox Simulator</li>
+                  <li className="flex items-center gap-2">↳ Downloadable Compliant Template</li>
+                  <li className="flex items-center gap-2">↳ Error Isolation & Quarantine Guides</li>
+                </ul>
+              </div>
+              <div className="pt-6">
+                <Button
+                  onClick={() => navigate('/docs/user-guide')}
+                  className="w-full h-11 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-emerald-500/10"
+                >
+                  <span>Open Operations Guide</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             </Card>
 
-            {/* Feature 2 */}
-            <Card className="p-6 rounded-2xl border border-border/80 bg-card/40 backdrop-blur-md hover:border-primary/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
-              <div className="space-y-4">
-                <div className="h-10 w-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
-                  <FileSpreadsheet className="h-5.5 w-5.5" />
+            {/* Card 2: Developer API Reference Docs */}
+            <Card className="p-8 rounded-3xl border border-border bg-card/65 backdrop-blur-md hover:border-primary/45 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group text-left">
+              <div className="space-y-5">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
+                  <Terminal className="h-6 w-6" />
                 </div>
-                <h3 className="font-bold text-base">Compliance Validation</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Trims spaces and checks currency, rate logic, accounts, and format structures, isolating cell discrepancies instantly.
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-foreground">Technical API Portal</h3>
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">For Engineers & System Integrators</p>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Complete technical specification catalog containing details on token authentication, Spring Batch microservices schemas, copyable curl commands, and active Swagger UI bridges.
                 </p>
+                <ul className="space-y-2 text-xs text-muted-foreground font-mono bg-muted/30 p-4 rounded-2xl border border-border/40">
+                  <li className="flex items-center gap-2">↳ 26 REST API Endpoints Catalog</li>
+                  <li className="flex items-center gap-2">↳ Stateless JWT & OAuth2 Security Flow</li>
+                  <li className="flex items-center gap-2">↳ Copyable cURL Integration Snippets</li>
+                  <li className="flex items-center gap-2">↳ Dynamic Swagger UI Interactive Console</li>
+                </ul>
               </div>
-            </Card>
-
-            {/* Feature 3 */}
-            <Card className="p-6 rounded-2xl border border-border/80 bg-card/40 backdrop-blur-md hover:border-primary/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
-              <div className="space-y-4">
-                <div className="h-10 w-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
-                  <Layers className="h-5.5 w-5.5" />
-                </div>
-                <h3 className="font-bold text-base">Audit-Trail Isolations</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Separates active transactions, error record logs, and permanent AES-256 historical database tables.
-                </p>
-              </div>
-            </Card>
-
-            {/* Feature 4 */}
-            <Card className="p-6 rounded-2xl border border-border/80 bg-card/40 backdrop-blur-md hover:border-primary/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
-              <div className="space-y-4">
-                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
-                  <Lock className="h-5.5 w-5.5" />
-                </div>
-                <h3 className="font-bold text-base">2FA Google MFA</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Shields sensitive transactional dataset downloads behind Google Authenticator TOTP verification guards.
-                </p>
+              <div className="pt-6">
+                <Button
+                  onClick={() => navigate('/docs/api')}
+                  className="w-full h-11 bg-primary hover:bg-primary/95 text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-primary/20"
+                >
+                  <span>Open Developer Portal</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             </Card>
 
@@ -476,15 +289,15 @@ export default function LandingPage() {
       </section>
 
       {/* Stepper Process Flow Section */}
-      <section id="process" className="py-20 relative">
+      <section id="process" className="py-20 border-t border-border/40 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3.5">
-            <span className="text-[11px] font-bold tracking-widest text-primary uppercase">Simple Integration</span>
+            <span className="text-[11px] font-bold tracking-widest text-primary uppercase">Seamless Execution</span>
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-              Purify Ledgers in Four Steps
+              Ingestion In Four Steps
             </h2>
             <p className="text-sm sm:text-base text-muted-foreground">
-              A comprehensive system designed to eliminate spreadsheet transaction errors.
+              A comprehensive system designed to parse, validate, and secure transaction streams.
             </p>
           </div>
 
@@ -496,7 +309,7 @@ export default function LandingPage() {
               </div>
               <h3 className="font-bold text-base">Upload CSV Ledgers</h3>
               <p className="text-xs text-muted-foreground leading-relaxed max-w-[220px]">
-                Log in securely and upload your raw CSV ledger files directly into our high-speed validation portal.
+                Log in and upload raw CSV ledger files directly into our high-speed ingestion portal.
               </p>
             </div>
 
@@ -507,7 +320,7 @@ export default function LandingPage() {
               </div>
               <h3 className="font-bold text-base">Stream & Validate</h3>
               <p className="text-xs text-muted-foreground leading-relaxed max-w-[220px]">
-                The streaming engine parses rows, running structural, numeric, and currency normalize checks.
+                The streaming engine parses rows, running structural, numeric, and validation rule checks.
               </p>
             </div>
 
@@ -516,9 +329,9 @@ export default function LandingPage() {
               <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center text-sm font-bold shadow-inner">
                 3
               </div>
-              <h3 className="font-bold text-base">Rectify Discrepancies</h3>
+              <h3 className="font-bold text-base">Isolate Anomaly Errors</h3>
               <p className="text-xs text-muted-foreground leading-relaxed max-w-[220px]">
-                Review identified compliance anomalies instantly. Download target log worksheets to fix errors.
+                Clean transactions import immediately; non-compliant records are quarantined for review.
               </p>
             </div>
 
@@ -529,131 +342,16 @@ export default function LandingPage() {
               </div>
               <h3 className="font-bold text-base">TOTP Secure Export</h3>
               <p className="text-xs text-muted-foreground leading-relaxed max-w-[220px]">
-                Scan Google Authenticator, input dynamic OTP, and securely download your purified datasets.
+                Verify Google Authenticator, input dynamic OTP, and securely download your clean datasets.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Security Assurance Trust Banner */}
-      <section id="security" className="py-16 bg-muted/15 border-y border-border/40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="p-8 sm:p-12 rounded-3xl border border-border/80 bg-gradient-to-br from-card to-card/45 backdrop-blur-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-8 space-y-4 text-center lg:text-left">
-                <span className="text-[11px] font-bold text-primary uppercase tracking-widest flex items-center gap-1.5 justify-center lg:justify-start">
-                  <Lock className="h-4 w-4 text-primary animate-pulse" /> Security Compliance Core
-                </span>
-                <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                  Designed for Rigorous Institutional Ledgers
-                </h3>
-                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-xl">
-                  TradeStream integrates multi-layered protections. All endpoints enforce token-checked authorization, databases leverage AES-256 ledger archiving, and critical dataset downloading is secured under mandatory Google Authenticator 2FA.
-                </p>
-              </div>
-
-              <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 justify-center">
-                <div className="flex items-center gap-3 bg-muted/50 p-3 rounded-xl border border-border/60 w-full">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-                  <span className="text-xs font-semibold font-mono">Google OAuth2 SSO</span>
-                </div>
-                <div className="flex items-center gap-3 bg-muted/50 p-3 rounded-xl border border-border/60 w-full">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-                  <span className="text-xs font-semibold font-mono">MFA Authenticator (TOTP)</span>
-                </div>
-                <div className="flex items-center gap-3 bg-muted/50 p-3 rounded-xl border border-border/60 w-full">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-                  <span className="text-xs font-semibold font-mono">AES-256 Ledger Archival</span>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Accordion FAQ Section */}
-      <section id="faq" className="py-20">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12 space-y-3.5">
-            <span className="text-[11px] font-bold tracking-widest text-primary uppercase flex items-center justify-center gap-1">
-              <HelpCircle className="h-4 w-4" /> Got Questions?
-            </span>
-            <h2 className="text-3xl font-extrabold tracking-tight">Frequently Asked Questions</h2>
-            <p className="text-xs sm:text-sm text-muted-foreground">Everything you need to know about TradeStream Engine.</p>
-          </div>
-
-          <Accordion type="single" collapsible className="w-full space-y-4">
-            
-            <AccordionItem value="item-1" className="border border-border/80 bg-card/30 backdrop-blur-md rounded-2xl px-5">
-              <AccordionTrigger className="text-sm font-semibold hover:no-underline hover:text-primary transition-colors">
-                What file formats and sizes are supported?
-              </AccordionTrigger>
-              <AccordionContent className="text-xs text-muted-foreground leading-relaxed pt-1 pb-4">
-                TradeStream is built exclusively for comma-separated value (.csv) formats. By dedicating our streaming engine strictly to the CSV standard, we achieve parsing speeds exceeding 50,000 records per second, handling massive datasets without causing server-side memory bottlenecks.
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="item-2" className="border border-border/80 bg-card/30 backdrop-blur-md rounded-2xl px-5">
-              <AccordionTrigger className="text-sm font-semibold hover:no-underline hover:text-primary transition-colors">
-                Why is TOTP (Google Authenticator) required for exports?
-              </AccordionTrigger>
-              <AccordionContent className="text-xs text-muted-foreground leading-relaxed pt-1 pb-4">
-                To maintain comprehensive institutional audit compliance and transaction integrity. Restricting data extraction exports behind dynamic TOTP verification prevents unauthorized session exports, guaranteeing that only registered, authorized operators can pull clean ledger worksheets or archived pools.
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="item-3" className="border border-border/80 bg-card/30 backdrop-blur-md rounded-2xl px-5">
-              <AccordionTrigger className="text-sm font-semibold hover:no-underline hover:text-primary transition-colors">
-                How does the platform isolate data validation errors?
-              </AccordionTrigger>
-              <AccordionContent className="text-xs text-muted-foreground leading-relaxed pt-1 pb-4">
-                Our ingestion engine validates row compliance fields. If a cell contains a structural anomaly (such as space paddings, out-of-bounds currency formats, or malformed account IDs), the batch parser isolates the row. Successfully validated records are saved directly to the database, while errors are sent to the compliance board showing exact coordinate details.
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="item-4" className="border border-border/80 bg-card/30 backdrop-blur-md rounded-2xl px-5">
-              <AccordionTrigger className="text-sm font-semibold hover:no-underline hover:text-primary transition-colors">
-                Is my connection secure?
-              </AccordionTrigger>
-              <AccordionContent className="text-xs text-muted-foreground leading-relaxed pt-1 pb-4">
-                Absolutely. All API routes, redirects, and database processes enforce TLS encryption. Frontend network requests use automatic CORS configuration and interceptors that wipe token logs instantly in the event of local context expiration or base connection errors.
-              </AccordionContent>
-            </AccordionItem>
-
-          </Accordion>
-        </div>
-      </section>
-
-      {/* Bottom Conversion Banner */}
-      <section className="py-20 relative border-t border-border/40">
-        <div className="absolute inset-0 bg-gradient-to-t from-primary/5 via-transparent to-transparent pointer-events-none -z-10" />
-        
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-8 flex flex-col items-center">
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-[1.2]">
-            Ready to Supercharge Your{' '}
-            <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-              Transaction Operations?
-            </span>
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
-            Create your account today. Establish Google-MFA protection, upload transaction files, and start purging ledger errors immediately.
-          </p>
-          <Button
-            onClick={() => navigate('/login')}
-            className="h-12 px-10 rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 text-white font-semibold shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden group/btn2"
-          >
-            <span>Get Started</span>
-            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn2:translate-x-1" />
-          </Button>
-        </div>
-      </section>
-
       {/* Site Footer */}
       <footer className="bg-muted/10 border-t border-border/60 py-12 text-xs text-muted-foreground select-none">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 text-left">
           <div className="space-y-4">
             <Link 
               to="/" 
@@ -670,32 +368,22 @@ export default function LandingPage() {
               </div>
               <span className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">TradeStream</span>
             </Link>
-            <p className="leading-relaxed max-w-[200px]">
+            <p className="leading-relaxed max-w-[240px]">
               Decentralized high-volume trade processing & transaction integrity suite.
             </p>
           </div>
           <div>
-            <h4 className="font-bold text-foreground mb-3 uppercase tracking-wider text-[10px]">Product</h4>
+            <h4 className="font-bold text-foreground mb-3 uppercase tracking-wider text-[10px]">Documentation Links</h4>
             <ul className="space-y-2.5">
-              <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
-              <li><a href="#process" className="hover:text-foreground transition-colors">How It Works</a></li>
-              <li><Link to="/login" className="hover:text-foreground transition-colors">Launch Ingest</Link></li>
+              <li><Link to="/docs/user-guide" className="hover:text-foreground transition-colors">Client Operations Guide</Link></li>
+              <li><Link to="/docs/api" className="hover:text-foreground transition-colors">Technical API Reference</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-bold text-foreground mb-3 uppercase tracking-wider text-[10px]">Security</h4>
+            <h4 className="font-bold text-foreground mb-3 uppercase tracking-wider text-[10px]">Portal Security</h4>
             <ul className="space-y-2.5">
-              <li><a href="#security" className="hover:text-foreground transition-colors">Verification Protocol</a></li>
-              <li><span className="text-muted-foreground/60">ISO 27001 Registered</span></li>
-              <li><span className="text-muted-foreground/60">2FA MFA Compliant</span></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-bold text-foreground mb-3 uppercase tracking-wider text-[10px]">Developers</h4>
-            <ul className="space-y-2.5">
-              <li><span className="text-muted-foreground/60">API Documentation</span></li>
-              <li><span className="text-muted-foreground/60">Ledger Schemas</span></li>
-              <li><span className="text-muted-foreground/60">Uptime Status 100%</span></li>
+              <li><span className="text-muted-foreground/60">2FA MFA Authenticator Enabled</span></li>
+              <li><span className="text-muted-foreground/60">AES-256 Historical Ledger Archival</span></li>
             </ul>
           </div>
         </div>

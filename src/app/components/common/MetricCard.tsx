@@ -15,7 +15,7 @@ interface MetricCardProps {
 
 export function MetricCard({ title, value, icon: Icon, gradient, trend, isLoading }: MetricCardProps) {
   const count = useMotionValue(0);
-  const rounded = useTransform(count, (latest) => Math.round(latest));
+  const rounded = useTransform(count, (latest) => Math.round(latest).toLocaleString());
 
   useEffect(() => {
     if (!isLoading) {

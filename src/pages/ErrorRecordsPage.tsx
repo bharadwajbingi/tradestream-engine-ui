@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Download, Ban, Eye } from 'lucide-react';
+import { Download, Ban } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useErrors } from '../hooks/useErrors';
 import { DataTable, Column } from '../app/components/common/DataTable';
@@ -155,8 +155,12 @@ export default function ErrorRecordsPage() {
     },
     {
       header: 'Error Message',
-      accessor: (row) => <span className="text-sm font-medium text-foreground">{row?.errorMessage || 'N/A'}</span>,
-      className: 'max-w-xs truncate',
+      accessor: (row) => (
+        <span className="text-sm font-medium text-foreground truncate block" title={row?.errorMessage || 'N/A'}>
+          {row?.errorMessage || 'N/A'}
+        </span>
+      ),
+      className: 'max-w-[200px] truncate',
     },
     {
       header: 'Status',
@@ -165,17 +169,20 @@ export default function ErrorRecordsPage() {
     {
       header: 'File',
       accessor: (row) => (
-        <div className="text-sm">
-          <p className="font-mono text-muted-foreground font-medium">{row?.filename || 'N/A'}</p>
+        <div className="text-sm max-w-[130px]">
+          <p className="font-mono text-muted-foreground font-medium truncate" title={row?.filename || 'N/A'}>
+            {row?.filename || 'N/A'}
+          </p>
           <p className="text-xs text-muted-foreground/60">ID: {row?.fileId}</p>
         </div>
       ),
+      className: 'max-w-[140px]',
     },
     {
       header: 'Created Time',
       accessor: (row) => (
         <span className="text-sm text-muted-foreground">
-          {row?.createdTime ? format(new Date(row.createdTime), 'MMM dd, yyyy HH:mm') : 'N/A'}
+          {row?.createdTime ? format(new Date(row.createdTime), 'MMM dd, HH:mm') : 'N/A'}
         </span>
       ),
     },
@@ -188,33 +195,19 @@ export default function ErrorRecordsPage() {
           return <span className="text-muted-foreground text-xs italic">-</span>;
         }
         return (
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              title="View details"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/errors/${row.errorId}`);
-              }}
-            >
-              <Eye className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 px-2.5 text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-50 transition-all font-semibold"
-              disabled={isProcessing}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleIgnore(row.errorId);
-              }}
-            >
-              <Ban className="h-3.5 w-3.5 mr-1" />
-              Ignore
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-2.5 text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-50 transition-all font-semibold"
+            disabled={isProcessing}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleIgnore(row.errorId);
+            }}
+          >
+            <Ban className="h-3.5 w-3.5 mr-1" />
+            Ignore
+          </Button>
         );
       },
     },

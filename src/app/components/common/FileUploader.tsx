@@ -60,7 +60,8 @@ export function FileUploader({ onUpload, accept = '.csv' }: FileUploaderProps) {
         }
       });
       setProgress(100);
-      setStatus('success');
+      setStatus('idle');
+      setFile(null); // Instantly revert to clean idle state ready for the next file
     } catch (error) {
       setStatus('error');
       setErrorMessage(error instanceof Error ? error.message : 'Upload failed');
@@ -85,9 +86,9 @@ export function FileUploader({ onUpload, accept = '.csv' }: FileUploaderProps) {
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         className={cn(
-          'border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-200',
+          'border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-200 bg-card',
           isDragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50',
-          status === 'error' && 'border-error'
+          status === 'error' && 'border-error/50 bg-error/5'
         )}
       >
         <input
@@ -99,32 +100,34 @@ export function FileUploader({ onUpload, accept = '.csv' }: FileUploaderProps) {
         />
 
         <div className="flex flex-col items-center gap-3">
-          {status === 'success' ? (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+          {/* Error Banner inside dropzone */}
+          {status === 'error' && (
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold shadow-sm mb-1"
             >
-              <CheckCircle2 className="h-12 w-12 text-success" />
+              <AlertCircle className="h-4 w-4 text-rose-500 shrink-0" />
+              <span>Upload Failed</span>
             </motion.div>
-          ) : status === 'error' ? (
-            <AlertCircle className="h-12 w-12 text-error" />
-          ) : (
-            <Upload className={cn('h-12 w-12', isDragging ? 'text-primary' : 'text-muted-foreground')} />
           )}
 
-          {file ? (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted">
-              <File className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">{file.name}</span>
-              <span className="text-xs text-muted-foreground">({formatFileSize(file.size)})</span>
-            </div>
-          ) : (
-            <>
-              <p className="font-medium">Drop your file here or click to browse</p>
-              <p className="text-sm text-muted-foreground">Supports CSV files</p>
-            </>
-          )}
+          <Upload 
+            className={cn(
+              'h-12 w-12 transition-colors duration-200', 
+              isDragging ? 'text-primary animate-bounce' : 
+              status === 'error' ? 'text-rose-500' : 'text-muted-foreground'
+            )} 
+          />
+
+          <div className="space-y-1">
+            <p className="font-semibold text-base text-foreground">
+              {isDragging 
+                ? 'Drop to upload' 
+                : 'Drop your file here or click to browse'}
+            </p>
+            <p className="text-xs text-muted-foreground">Supports CSV files</p>
+          </div>
         </div>
       </div>
 
@@ -136,7 +139,7 @@ export function FileUploader({ onUpload, accept = '.csv' }: FileUploaderProps) {
       )}
 
       {status === 'error' && (
-        <p className="text-sm text-error text-center">{errorMessage}</p>
+        <p className="text-sm text-error text-center font-medium">{errorMessage}</p>
       )}
     </div>
   );

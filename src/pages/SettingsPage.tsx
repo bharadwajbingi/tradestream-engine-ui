@@ -6,7 +6,7 @@ import { RadioGroup, RadioGroupItem } from '../app/components/ui/radio-group';
 import { useAuthStore } from '../store/authStore';
 import { useState, useEffect } from 'react';
 import { CheckCircle2, ShieldCheck, ShieldAlert, QrCode, Copy, Check, Loader2, Lock, Trash2 } from 'lucide-react';
-import { axiosInstance, BASE_URL } from '../services/axios';
+import { axiosInstance } from '../services/axios';
 import { toast } from 'sonner';
 
 interface TotpSetupResponse {
@@ -481,20 +481,7 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      {/* Connection Context Notice */}
-      <Card className="p-6 rounded-2xl border border-border">
-        <h3 className="font-semibold mb-4">Connection</h3>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-medium">API Base URL</p>
-            <p className="text-sm text-muted-foreground font-mono">{BASE_URL}</p>
-          </div>
-          <div className="flex items-center gap-2 text-success">
-            <CheckCircle2 className="h-5 w-5" />
-            <span className="text-sm font-medium">Connected</span>
-          </div>
-        </div>
-      </Card>
+
     </div>
   );
 }

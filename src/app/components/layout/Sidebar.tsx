@@ -1,4 +1,7 @@
-import { LayoutDashboard, Upload, FileText, AlertCircle, Settings, LogOut, Download, Search, X, ShieldCheck } from 'lucide-react';
+import { 
+  LayoutDashboard, Upload, FileText, AlertCircle, Settings, LogOut, 
+  Download, Search, X, ShieldCheck, BookOpen 
+} from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
 import { useAuthStore } from '../../../store/authStore';
@@ -10,6 +13,7 @@ const navItems = [
   { icon: AlertCircle, label: 'Error Records', path: '/errors' },
   { icon: Search, label: 'Search', path: '/search' },
   { icon: Download, label: 'Download Data', path: '/download' },
+  { icon: BookOpen, label: 'User Guide', path: '/docs/user-guide' },
 ];
 
 export function Sidebar({ onClose }: { onClose?: () => void }) {
@@ -59,6 +63,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           );
         })}
 
+
+
         <div className="my-4 border-t border-sidebar-border" />
 
         <Link
@@ -103,4 +109,3 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
     </aside>
   );
 }
-

@@ -7,8 +7,36 @@ import { StatusBadge } from '../app/components/common/StatusBadge';
 import { format } from 'date-fns';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../app/components/ui/accordion';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle, Download, Copy, Check, FileText } from 'lucide-react';
 import { FileLoadMetaData } from '../types';
+import { useState } from 'react';
+
+const CSV_COLUMNS = [
+  { name: 'transactionId', required: true, type: 'Alphanumeric', format: 'TXN...' },
+  { name: 'fileHeaderDate', required: true, type: 'Date', format: 'yyyyMMdd' },
+  { name: 'accountNumber', required: true, type: 'Alphanumeric', format: 'ACC...' },
+  { name: 'transactionType', required: true, type: 'Numeric', format: 'Integer' },
+  { name: 'batchLocation', required: true, type: 'String', format: 'Branch (e.g. MUM)' },
+  { name: 'batchNumber', required: true, type: 'Numeric', format: 'Integer' },
+  { name: 'updateBatchDate', required: true, type: 'Numeric', format: 'yyyyMMdd' },
+  { name: 'relatedFileNumber', required: false, type: 'Numeric', format: 'Integer' },
+  { name: 'actionName', required: true, type: 'String', format: 'REV, POST, ADJ' },
+  { name: 'relatedFileKey', required: true, type: 'Numeric', format: 'Integer' },
+  { name: 'doNotReportFlag', required: true, type: 'Character', format: 'Y / N' },
+  { name: 'explanation', required: false, type: 'String', format: 'Max 255 chars' },
+  { name: 'minorAssetsClass', required: false, type: 'Numeric', format: 'Integer' },
+  { name: 'owningPortfolio', required: true, type: 'Numeric', format: 'Integer' },
+  { name: 'posterInitials', required: true, type: 'String', format: 'Initials (e.g. RS)' },
+  { name: 'transactionSubtype', required: true, type: 'Numeric', format: 'Integer' },
+  { name: 'cashEffect', required: true, type: 'Decimal', format: 'Scale <= 2' },
+  { name: 'cashPaidOut', required: false, type: 'Decimal', format: 'Scale <= 2' },
+  { name: 'brokerNumber', required: false, type: 'Numeric', format: 'Integer' },
+  { name: 'oldBalance', required: true, type: 'Decimal', format: 'Scale <= 2' },
+  { name: 'newBalance', required: true, type: 'Decimal', format: 'Scale <= 2' }
+];
+
+const CSV_HEADER_STRING = CSV_COLUMNS.map(c => c.name).join(',');
+const CSV_SAMPLE_ROW = 'TXN002048,20251104,ACC000002048,74,MUM,606032,20260225,810106,REV,48000174,Y,AUTO-GENERATED TRANSACTION,75,556513,VP,20,45473.65,0.00,45638,2231543,2228081.64';
 
 const LIVE_STATUSES = new Set(['STARTED', 'PROCESSING', 'PENDING']);
 
@@ -53,6 +81,26 @@ export default function UploadPage() {
     : [];
   const recentFiles = sortedFiles.slice(0, 5);
 
+  const [copiedHeader, setCopiedHeader] = useState(false);
+
+  const handleCopyHeader = () => {
+    navigator.clipboard.writeText(CSV_HEADER_STRING);
+    setCopiedHeader(true);
+    setTimeout(() => setCopiedHeader(false), 2000);
+  };
+
+  const handleDownloadTemplate = () => {
+    const fileContent = [CSV_HEADER_STRING, CSV_SAMPLE_ROW].join('\n');
+    const blob = new Blob([fileContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'tse_ingestion_template.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleUpload = async (file: File, onProgress?: (progressEvent: any) => void) => {
     await fileService.uploadFile(file, onProgress);
     queryClient.invalidateQueries({ queryKey: ['files'] });
@@ -71,21 +119,78 @@ export default function UploadPage() {
             <FileUploader onUpload={handleUpload} accept=".csv" />
           </Card>
 
-          <Card className="p-6 rounded-2xl border border-border">
-            <h3 className="font-semibold mb-4">File Format Reference</h3>
-            <Accordion type="single" collapsible>
-              <AccordionItem value="csv">
-                <AccordionTrigger>CSV Format</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  <div className="space-y-2">
-                    <p>Required columns:</p>
-                    <ul className="list-disc list-inside space-y-1 ml-2">
-                      <li>transactionId</li>
-                      <li>accountNumber</li>
-                      <li>amount</li>
-                      <li>currency</li>
-                      <li>timestamp</li>
-                    </ul>
+          <Card className="p-6 rounded-2xl border border-border space-y-4 text-left">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-foreground flex items-center gap-2">
+                <FileText className="h-4.5 w-4.5 text-primary" />
+                Ingestion File Specifications
+              </h3>
+              <button
+                onClick={handleDownloadTemplate}
+                className="inline-flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border border-primary/25"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download Template
+              </button>
+            </div>
+
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Files must be valid CSV sheets formatted with exactly <strong>21 financial columns</strong> in the specific sequence defined below.
+            </p>
+
+            <Accordion type="single" collapsible className="w-full">
+              {/* 1. Header row copyable */}
+              <AccordionItem value="headers">
+                <AccordionTrigger className="text-xs font-semibold">Standard CSV Header Row</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-2 pt-1 text-left">
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+                      <span>Header string:</span>
+                      <button
+                        onClick={handleCopyHeader}
+                        className="text-primary hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        {copiedHeader ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 text-success" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3.5 w-3.5" />
+                            Copy Header
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <pre className="p-3 bg-slate-950 font-mono text-[10px] rounded-xl overflow-x-auto text-slate-300 border border-slate-900 leading-relaxed text-left">
+                      {CSV_HEADER_STRING}
+                    </pre>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* 2. Columns table */}
+              <AccordionItem value="columns">
+                <AccordionTrigger className="text-xs font-semibold">21 Columns Schema Definition</AccordionTrigger>
+                <AccordionContent>
+                  <div className="pt-2 max-h-[280px] overflow-y-auto border border-border/60 rounded-xl divide-y divide-border/60">
+                    {CSV_COLUMNS.map((col, idx) => (
+                      <div key={col.name} className="p-2.5 text-xs flex items-center justify-between gap-4 font-mono hover:bg-accent/15 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-primary w-4 text-right">{idx + 1}.</span>
+                          <span className="font-bold text-foreground">{col.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2.5 text-[10px]">
+                          <span className="text-muted-foreground">{col.format}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                            col.required ? 'bg-rose-500/10 text-rose-500' : 'bg-muted text-muted-foreground'
+                          }`}>
+                            {col.required ? 'Req' : 'Opt'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </AccordionContent>
               </AccordionItem>

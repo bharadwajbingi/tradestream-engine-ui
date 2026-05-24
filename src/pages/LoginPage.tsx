@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { motion } from 'motion/react';
-import { Link } from 'react-router-dom';
-import { Card } from '../app/components/ui/card';
-import { Button } from '../app/components/ui/button';
-import { ShieldCheck, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { motion } from "motion/react";
+import { Link } from "react-router-dom";
+import { Card } from "../app/components/ui/card";
+import { Button } from "../app/components/ui/button";
+import { ShieldCheck, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 const cardVariants = {
   initial: { opacity: 0, y: 30 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
 
 export default function LoginPage() {
@@ -18,8 +18,8 @@ export default function LoginPage() {
 
   const handleGoogleLogin = () => {
     setIsRedirecting(true);
-    toast.loading('Redirecting to Google Secure Login...');
-    
+    toast.loading("Redirecting to Google Secure Login...");
+
     // Redirect to the Spring Boot Google OAuth2 initiation endpoint
     window.location.href = `${BASE_URL}/oauth2/authorization/google`;
   };
@@ -30,24 +30,36 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent" />
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-3xl" />
-      
-      <div className="absolute inset-0 opacity-10" style={{
-        backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
-        backgroundSize: '24px 24px'
-      }} />
 
-      <motion.div variants={cardVariants} initial="initial" animate="animate" className="relative z-10 w-full max-w-md">
+      <div
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, currentColor 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
+        }}
+      />
+
+      <motion.div
+        variants={cardVariants}
+        initial="initial"
+        animate="animate"
+        className="relative z-10 w-full max-w-md"
+      >
         {/* Sleek outer glowing effect */}
         <div className="absolute -inset-1.5 bg-gradient-to-r from-primary to-purple-600 rounded-3xl blur-xl opacity-20 group-hover:opacity-30 transition duration-1000 group-hover:duration-200" />
-        
+
         <Card className="w-full p-10 rounded-3xl border border-border/80 bg-card/60 backdrop-blur-2xl shadow-2xl relative">
           <div className="mb-8 text-center flex flex-col items-center">
             {/* Animated modern logo container */}
-            <Link to="/" className="flex flex-col items-center group cursor-pointer">
+            <Link
+              to="/"
+              className="flex flex-col items-center group cursor-pointer"
+            >
               <motion.div
                 initial={{ scale: 0.8, rotate: -10 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
+                transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
                 className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-primary-foreground mb-6 shadow-lg shadow-primary/20 relative transition-transform duration-300 group-hover:scale-105"
               >
                 <ShieldCheck className="h-9 w-9 text-white" />
@@ -61,7 +73,8 @@ export default function LoginPage() {
               </h1>
             </Link>
             <p className="text-sm text-muted-foreground mt-2 max-w-[280px] leading-relaxed">
-              Decentralized high-volume trade processing & transaction integrity suite
+              Decentralized high-volume trade processing & transaction integrity
+              suite
             </p>
           </div>
 
@@ -75,7 +88,7 @@ export default function LoginPage() {
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15 }}
             >
               <Button
                 onClick={handleGoogleLogin}
@@ -84,9 +97,24 @@ export default function LoginPage() {
               >
                 {isRedirecting ? (
                   <div className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5 text-slate-700" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <svg
+                      className="animate-spin h-5 w-5 text-slate-700"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     <span>Establishing Secure Route...</span>
                   </div>

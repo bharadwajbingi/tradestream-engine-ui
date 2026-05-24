@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react';
 import type { ChangeEvent } from 'react';
-import { Trash2, Archive, Download, Upload } from 'lucide-react';
+import { Trash2, Archive, Download } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -30,8 +30,6 @@ export default function FileRecordsPage() {
   const [selectedFile, setSelectedFile] = useState<FileLoadMetaData | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
-  const [reuploadTarget, setReuploadTarget] = useState<FileLoadMetaData | null>(null);
-  const reuploadInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   const handleDownloadFile = async (fileId: number, filename: string) => {
@@ -60,24 +58,7 @@ export default function FileRecordsPage() {
     setSearchParams(searchParams);
   };
 
-  const handleReuploadFile = async (event: ChangeEvent<HTMLInputElement>) => {
-    const correctedFile = event.target.files?.[0];
-    if (!correctedFile || !reuploadTarget) return;
 
-    const toastId = toast.loading(`Uploading corrected CSV for ${reuploadTarget.filename}`);
-    try {
-      await fileService.uploadFile(correctedFile);
-      queryClient.invalidateQueries({ queryKey: ['files'] });
-      queryClient.invalidateQueries({ queryKey: ['errors'] });
-      queryClient.invalidateQueries({ queryKey: ['metrics'] });
-      toast.success('Corrected file uploaded for processing', { id: toastId });
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Failed to upload corrected file', { id: toastId });
-    } finally {
-      event.target.value = '';
-      setReuploadTarget(null);
-    }
-  };
 
   const filteredData = useMemo(() => {
     if (!files) return [];
@@ -158,21 +139,7 @@ export default function FileRecordsPage() {
             <Download className="h-4 w-4" />
           </Button>
 
-          {row.status === 'COMPLETED_WITH_ERROR' || row.status === 'FAILED' ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                setReuploadTarget(row);
-                reuploadInputRef.current?.click();
-              }}
-              title="Reupload Corrected CSV"
-            >
-              <Upload className="h-4 w-4" />
-            </Button>
-          ) : null}
+
 
           {row.status !== 'ARCHIVED' ? (
             <>
@@ -213,13 +180,7 @@ export default function FileRecordsPage() {
 
   return (
     <div className="space-y-6">
-      <input
-        ref={reuploadInputRef}
-        type="file"
-        accept=".csv"
-        className="hidden"
-        onChange={handleReuploadFile}
-      />
+
 
       <div className="flex flex-col sm:flex-row gap-4">
         <SearchBar
