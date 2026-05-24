@@ -5,7 +5,7 @@ import { useAuthStore } from '../../../store/authStore';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { Button } from '../ui/button';
 import {
-  ShieldCheck, BookOpen, Terminal, Menu, X, ArrowRight,
+  ShieldCheck, BookOpen, Terminal, Menu, X,
   ChevronRight, Home, ExternalLink, LayoutDashboard
 } from 'lucide-react';
 
@@ -103,7 +103,7 @@ export function DocsLayout() {
           </nav>
 
           {/* Right: Theme + Auth Button */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 md:mr-8 lg:mr-12">
             <ThemeToggle />
             {isAuthenticated ? (
               <Button
@@ -121,7 +121,6 @@ export function DocsLayout() {
                 className="h-8 px-3 bg-gradient-to-r from-primary to-purple-600 text-white text-xs font-semibold rounded-lg shadow-sm shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-px transition-all"
               >
                 Sign In
-                <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
               </Button>
             )}
           </div>

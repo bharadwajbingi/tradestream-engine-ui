@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  ShieldCheck, ArrowRight, BookOpen, Terminal, 
+  ShieldCheck, BookOpen, Terminal, 
   Layers, ChevronRight, Menu, X, LayoutDashboard 
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
@@ -15,10 +15,12 @@ export default function LandingPage() {
   const { isAuthenticated } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [heroOutOfView, setHeroOutOfView] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
+      setHeroOutOfView(window.scrollY > 300);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -82,27 +84,28 @@ export default function LandingPage() {
           </nav>
 
           {/* Desktop Action Buttons */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2 md:mr-8 lg:mr-12">
             <ThemeToggle />
-            {isAuthenticated ? (
-              <Button
-                onClick={() => navigate('/dashboard')}
-                size="sm"
-                className="h-8 px-3 bg-gradient-to-r from-primary to-purple-600 text-white text-xs font-semibold rounded-lg shadow-sm shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-px transition-all"
-              >
-                <LayoutDashboard className="h-3.5 w-3.5 mr-1.5" />
-                Dashboard
-              </Button>
-            ) : (
-              <Button
-                onClick={() => navigate('/login')}
-                size="sm"
-                className="h-8 px-3 bg-gradient-to-r from-primary to-purple-600 text-white text-xs font-semibold rounded-lg shadow-sm shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-px transition-all"
-              >
-                Sign In
-                <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-              </Button>
-            )}
+            <div className={`transition-all duration-300 ${heroOutOfView ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1 pointer-events-none'}`}>
+              {isAuthenticated ? (
+                <Button
+                  onClick={() => navigate('/dashboard')}
+                  size="sm"
+                  className="h-8 px-3 bg-gradient-to-r from-primary to-purple-600 text-white text-xs font-semibold rounded-lg shadow-sm shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-px transition-all"
+                >
+                  <LayoutDashboard className="h-3.5 w-3.5 mr-1.5" />
+                  Dashboard
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => navigate('/login')}
+                  size="sm"
+                  className="h-8 px-3 bg-gradient-to-r from-primary to-purple-600 text-white text-xs font-semibold rounded-lg shadow-sm shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-px transition-all"
+                >
+                  Sign In
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Mobile menu toggle */}
@@ -203,6 +206,26 @@ export default function LandingPage() {
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl leading-relaxed">
             Process high-volume financial trade dumps with robust validation checks, dynamic error quarantine pipelines, and bank-grade TOTP multi-factor security locks.
           </p>
+
+          {/* Hero CTA */}
+          <div className="flex items-center gap-4 pt-2">
+            {isAuthenticated ? (
+              <Button
+                onClick={() => navigate('/dashboard')}
+                className="h-12 px-8 bg-gradient-to-r from-primary to-purple-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all"
+              >
+                <LayoutDashboard className="h-4.5 w-4.5 mr-2" />
+                Go to Dashboard
+              </Button>
+            ) : (
+              <Button
+                onClick={() => navigate('/login')}
+                className="h-12 px-8 bg-gradient-to-r from-primary to-purple-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all"
+              >
+                Sign In
+              </Button>
+            )}
+          </div>
 
         </div>
       </section>
