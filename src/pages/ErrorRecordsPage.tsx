@@ -24,11 +24,12 @@ import {
 const ITEMS_PER_PAGE = 10;
 
 export default function ErrorRecordsPage() {
-  const { data: errors, isLoading } = useErrors();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const [processingId, setProcessingId] = useState<number | null>(null);
+
+  const { data: pageData, isLoading } = useErrors(searchQuery, statusFilter, currentPage - 1, ITEMS_PER_PAGE);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -52,41 +53,12 @@ export default function ErrorRecordsPage() {
     setCurrentPage(1);
   };
 
-  const filteredData = useMemo(() => {
-    if (!errors) return [];
-    return errors.filter((error) => {
-      const matchesSearch =
-        (error?.transactionId || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (error?.accountNumber || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (error?.errorMessage || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (error?.errorField || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (error?.filename || '').toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesStatus =
-        statusFilter === 'ALL'
-          ? error?.status !== 'IGNORED' && error?.status !== 'DUPLICATE'
-          : error?.status === statusFilter;
-
-      return matchesSearch && matchesStatus;
-    });
-  }, [errors, searchQuery, statusFilter]);
-
-  const sortedData = useMemo(() => {
-    return [...filteredData].sort((a, b) => {
-      const timeA = a?.createdTime ? new Date(a.createdTime).getTime() : 0;
-      const timeB = b?.createdTime ? new Date(b.createdTime).getTime() : 0;
-      return timeB - timeA;
-    });
-  }, [filteredData]);
-
-  const totalPages = Math.ceil(sortedData.length / ITEMS_PER_PAGE);
-  const paginatedData = sortedData.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const totalPages = pageData?.totalPages || 1;
+  const paginatedData = pageData?.content || [];
 
   const exportToCSV = () => {
-    if (!filteredData.length) return;
+    const dataToExport = pageData?.content || [];
+    if (!dataToExport.length) return;
 
     const headers = [
       'Error ID',
@@ -101,7 +73,7 @@ export default function ErrorRecordsPage() {
       'Created Time',
     ];
 
-    const rows = filteredData.map((error) => [
+    const rows = dataToExport.map((error) => [
       error?.errorId || '',
       error?.rowNumber || '',
       error?.transactionId || '',
@@ -213,7 +185,7 @@ export default function ErrorRecordsPage() {
     },
   ];
 
-  if (!isLoading && !errors?.length) {
+  if (!isLoading && (!pageData || pageData.content.length === 0) && !searchQuery && statusFilter === 'ALL') {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <div className="mb-4 rounded-full bg-success/10 p-6">
@@ -253,7 +225,7 @@ export default function ErrorRecordsPage() {
             </Select>
           </div>
         </div>
-        <Button onClick={exportToCSV} disabled={!filteredData.length} className="w-full md:w-auto shrink-0">
+        <Button onClick={exportToCSV} disabled={!paginatedData.length} className="w-full md:w-auto shrink-0">
           <Download className="h-4 w-4 mr-2" />
           Export CSV
         </Button>

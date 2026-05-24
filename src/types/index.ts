@@ -91,6 +91,9 @@ export interface TransactionErrorSearchRequest {
   accountNumber?: string;
   errorField?: string;
   status?: string;
+  page?: number;
+  size?: number;
+  globalSearchTerm?: string;
 }
 
 export interface User {
