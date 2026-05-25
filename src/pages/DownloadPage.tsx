@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, FileSpreadsheet, ShieldCheck, Database, Calendar, Filter, Archive, CheckCircle, Lock, Loader2, Sparkles } from 'lucide-react';
+import { Download, FileSpreadsheet, ShieldCheck, Database, Calendar, Filter, Archive, CheckCircle, Lock, Loader2, Sparkles, Clock, AlertTriangle } from 'lucide-react';
 import { Card } from '../app/components/ui/card';
 import { Button } from '../app/components/ui/button';
 import { Input } from '../app/components/ui/input';
@@ -17,6 +17,15 @@ import {
   DialogFooter,
 } from '../app/components/ui/dialog';
 
+interface ExportJob {
+  id: string;
+  status: string;
+  createdAt: string;
+  downloaded: boolean;
+  exportType?: string;
+  errorMessage?: string;
+}
+
 export default function DownloadPage() {
   const navigate = useNavigate();
   const [isExporting, setIsExporting] = useState(false);
@@ -26,9 +35,50 @@ export default function DownloadPage() {
   const [endDate, setEndDate] = useState<string>('');
 
   const [pendingExport, setPendingExport] = useState<{ type: 'active' | 'archived'; format: 'csv' } | null>(null);
+  const [pendingDownloadJobId, setPendingDownloadJobId] = useState<string | null>(null);
   const [showOtpDialog, setShowOtpDialog] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+
+  const [jobs, setJobs] = useState<ExportJob[]>([]);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchJobs = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get('/transactions/export/jobs');
+      setJobs(response.data);
+    } catch (err) {
+      console.error('Failed to fetch export jobs', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
+
+  useEffect(() => {
+    const hasPreparing = jobs.some(j => j.status === 'PENDING' || j.status === 'PROCESSING');
+    
+    if (hasPreparing) {
+      if (!pollIntervalRef.current) {
+        pollIntervalRef.current = setInterval(() => {
+          fetchJobs();
+        }, 3000);
+      }
+    } else {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
+  }, [jobs, fetchJobs]);
 
   useEffect(() => {
     const fetchFiles = async () => {
@@ -42,7 +92,6 @@ export default function DownloadPage() {
     fetchFiles();
   }, []);
 
-  // Entry point for clicking download button
   const triggerExport = async (type: 'active' | 'archived', format: 'csv' = 'csv') => {
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
       toast.error('Start date cannot be greater than end date');
@@ -54,13 +103,11 @@ export default function DownloadPage() {
       const is2faActive = statusResponse.data.data?.enabled || false;
 
       if (!is2faActive) {
-        // Direct redirect and block download if 2FA has not been registered
         toast.warning('Two-factor authentication (2FA) is required. Please set up your authenticator app in Settings before downloading transaction ledger files.');
         navigate('/settings');
         return;
       }
 
-      // 2FA is active, always prompt OTP dialog for every single download to enforce absolute audit compliance
       setPendingExport({ type, format });
       setOtpCode('');
       setShowOtpDialog(true);
@@ -70,7 +117,12 @@ export default function DownloadPage() {
     }
   };
 
-  // Verify code and then run export
+  const triggerDownload = (jobId: string) => {
+    setPendingDownloadJobId(jobId);
+    setOtpCode('');
+    setShowOtpDialog(true);
+  };
+
   const handleVerifyOtpAndProceed = async () => {
     if (otpCode.length !== 6 || isNaN(Number(otpCode))) {
       toast.error('Please enter a valid 6-digit verification code');
@@ -84,24 +136,23 @@ export default function DownloadPage() {
       const exportToken = verifyResponse.data.data;
       
       setShowOtpDialog(false);
-      toast.success('TOTP verification successful! Fetching dataset.', { id: toastId });
+      toast.success('TOTP verification successful!', { id: toastId });
 
       if (pendingExport) {
         executeExport(pendingExport.type, pendingExport.format, exportToken);
+      } else if (pendingDownloadJobId) {
+        executeDownload(pendingDownloadJobId, exportToken);
       }
     } catch (err: any) {
-      console.error('Failed to verify TOTP code for export', err);
+      console.error('Failed to verify TOTP code', err);
       toast.error(err.response?.data?.message || 'Invalid authenticator code. Access denied.', { id: toastId });
     } finally {
       setIsVerifyingOtp(false);
     }
   };
 
-  // Perform actual download logic
   const executeExport = async (type: 'active' | 'archived', format: 'csv', token: string | null) => {
     setIsExporting(true);
-    const toastId = toast.loading(`Initiating secure ${type.toUpperCase()} ledger dataset generation...`);
-
     try {
       const params: any = { format };
       if (startDate) params.startDate = startDate;
@@ -113,71 +164,99 @@ export default function DownloadPage() {
         headers['X-Export-Token'] = token;
       }
 
-      // Start the job
       const endpoint = type === 'active' ? '/transactions/export' : '/transactions/archive/export';
-      const response = await axiosInstance.get(endpoint, { params, headers });
+      await axiosInstance.get(endpoint, { params, headers });
       
-      const jobId = response.data?.jobId || response.data?.data?.jobId;
-      if (!jobId) {
-        throw new Error('No Job ID returned from server');
-      }
-
-      toast.loading('Export job submitted. Generating CSV in the background...', { id: toastId });
-
-      // Poll for status
-      const pollInterval = setInterval(async () => {
-        try {
-          const statusRes = await axiosInstance.get(`/transactions/export/status/${jobId}`, { headers });
-          const statusData = statusRes.data;
-
-          if (statusData.status === 'COMPLETED') {
-            clearInterval(pollInterval);
-            setIsExporting(false);
-            setPendingExport(null);
-            toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} ledger exported successfully! Check your downloads.`, { id: toastId });
-            
-            // Trigger download via presigned URL
-            if (statusData.downloadUrl) {
-              const link = document.createElement('a');
-              link.href = statusData.downloadUrl;
-              link.setAttribute('target', '_blank');
-              document.body.appendChild(link);
-              link.click();
-              link.remove();
-            }
-          } else if (statusData.status === 'FAILED') {
-            clearInterval(pollInterval);
-            setIsExporting(false);
-            setPendingExport(null);
-            toast.error(`Export failed: ${statusData.error || 'Unknown error'}`, { id: toastId });
-          } else {
-            // Still processing
-            toast.loading(`Job Processing... Please wait.`, { id: toastId });
-          }
-        } catch (pollErr) {
-          clearInterval(pollInterval);
-          setIsExporting(false);
-          setPendingExport(null);
-          toast.error('Error checking job status', { id: toastId });
-        }
-      }, 5000);
-
+      toast.success('Export job queued successfully.');
+      setPendingExport(null);
+      fetchJobs();
     } catch (error: any) {
       console.error('Export error:', error);
-      if (error.response?.status === 403) {
-        localStorage.removeItem('export_token');
-        localStorage.removeItem('export_token_expires');
-        localStorage.removeItem('export_token_email');
-      }
-      toast.error(`Export failed. Verification session may have expired.`, { id: toastId });
+      toast.error('Failed to queue export job.');
+    } finally {
       setIsExporting(false);
-      setPendingExport(null);
     }
   };
 
+  const executeDownload = async (jobId: string, token: string | null) => {
+    try {
+      const headers: any = {};
+      if (token) {
+        headers['X-Export-Token'] = token;
+      }
+
+      const downloadRes = await axiosInstance.get(`/transactions/export/download/${jobId}`, { headers });
+      const s3Url = downloadRes.data.downloadUrl;
+      
+      setPendingDownloadJobId(null);
+      
+      toast.info('Note: This download link will expire in 24 hours.', { duration: 10000 });
+      
+      if (s3Url) {
+        const link = document.createElement('a');
+        link.href = s3Url;
+        link.setAttribute('target', '_blank');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+      
+      fetchJobs();
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to get download link.');
+      setPendingDownloadJobId(null);
+    }
+  };
+
+  const isExpired = (createdAt: string) => {
+    const created = new Date(createdAt).getTime();
+    const now = new Date().getTime();
+    return now - created > 24 * 60 * 60 * 1000;
+  };
+
+  const formatDateIST = (dateString: string) => {
+    // Append 'Z' if missing so JS knows the date string is in UTC
+    const utcString = dateString.endsWith('Z') ? dateString : `${dateString}Z`;
+    return new Date(utcString).toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+  };
+
+  // Sort jobs oldest first to assign sequential numbers, then map names
+  const jobsWithNames = [...jobs]
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    .reduce((acc: (ExportJob & { displayName: string })[], job) => {
+      const isArchive = job.exportType === 'ARCHIVE';
+      const label = isArchive ? 'Archive Table Data' : 'Trade Data Main Table';
+      
+      const count = acc.filter(j => 
+        isArchive ? j.exportType === 'ARCHIVE' : j.exportType !== 'ARCHIVE'
+      ).length + 1;
+      
+      acc.push({
+        ...job,
+        displayName: `${label} #${count}`
+      });
+      return acc;
+    }, []);
+
+  // Show latest first in the UI lists
+  const orderedJobs = [...jobsWithNames].reverse();
+
+  const preparingJobs = orderedJobs.filter(j => j.status === 'PENDING' || j.status === 'PROCESSING');
+  const readyJobs = orderedJobs.filter(j => j.status === 'COMPLETED');
+  const failedJobs = orderedJobs.filter(j => j.status === 'FAILED');
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Page Header */}
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
           Data Export Centre
@@ -187,7 +266,6 @@ export default function DownloadPage() {
         </p>
       </div>
 
-      {/* Interactive Filters Panel */}
       <Card className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-xl">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="h-4 w-4 text-primary animate-pulse" />
@@ -254,9 +332,7 @@ export default function DownloadPage() {
         </div>
       </Card>
 
-      {/* Cards container */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Active Transactions Card */}
         <Card className="p-8 rounded-2xl border border-border flex flex-col justify-between space-y-6 bg-card/50 backdrop-blur-xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all duration-300"></div>
           
@@ -289,14 +365,13 @@ export default function DownloadPage() {
                 disabled={isExporting}
                 className="w-full flex items-center justify-center gap-1.5 text-xs rounded-xl font-semibold bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 shadow-md shadow-primary/10"
               >
-                <Download className="h-3.5 w-3.5 animate-pulse" />
-                Export Ledger (CSV)
+                <Download className="h-3.5 w-3.5" />
+                Queue Export (CSV)
               </Button>
             </div>
           </div>
         </Card>
 
-        {/* Archived Transactions Card */}
         <Card className="p-8 rounded-2xl border border-border flex flex-col justify-between space-y-6 bg-card/50 backdrop-blur-xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-all duration-300"></div>
 
@@ -329,26 +404,99 @@ export default function DownloadPage() {
                 disabled={isExporting}
                 className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-600/95 hover:to-indigo-600/95 text-white flex items-center justify-center gap-1.5 text-xs rounded-xl font-semibold border-none shadow-md shadow-purple-500/10"
               >
-                <Download className="h-3.5 w-3.5 animate-pulse" />
-                Export Archive (CSV)
+                <Download className="h-3.5 w-3.5" />
+                Queue Archive Export (CSV)
               </Button>
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Security Context Notice */}
-      <Card className="p-6 rounded-2xl border border-border bg-muted/30">
-        <h4 className="font-semibold text-sm flex items-center gap-2 text-foreground">
-          <ShieldCheck className="h-4 w-4 text-primary animate-pulse" />
-          Security Notice & Traceability
-        </h4>
-        <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-          All dataset exports are strictly tracked and audited. When Two-Factor Authentication is active, downloading transaction ledgers requires verification using a Google Authenticator TOTP token which grants a secure 5-minute export authorization.
-        </p>
-      </Card>
+      <div className="space-y-6 pt-6">
+        {preparingJobs.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+              <Clock className="h-4 w-4 text-blue-500 animate-pulse" />
+              Preparing Exports
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {preparingJobs.map(job => (
+                <div key={job.id} className="p-4 rounded-xl border border-border bg-card/50 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-mono text-muted-foreground">ID: {job.id.substring(0,8)}...</p>
+                    <p className="text-sm font-medium mt-1">Preparing {job.displayName}...</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Estimated time: ~10-15s</p>
+                  </div>
+                  <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-      {/* Radix Dialog for TOTP Verification */}
+        {readyJobs.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+              <CheckCircle className="h-4 w-4 text-emerald-500" />
+              Ready & History
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {readyJobs.map(job => {
+                const expired = isExpired(job.createdAt);
+                
+                return (
+                  <div key={job.id} className={`p-4 rounded-xl border flex flex-col gap-3 ${expired ? 'border-muted bg-muted/10 opacity-75' : 'border-border bg-card/40'}`}>
+                    <div>
+                      <div className="flex justify-between items-start">
+                        <p className="text-xs font-mono text-muted-foreground">ID: {job.id.substring(0,8)}...</p>
+                        {expired ? (
+                          <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium">Expired</span>
+                        ) : (
+                          <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">Active for 24h</span>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium mt-1 text-foreground">{job.displayName} Ready</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDateIST(job.createdAt)} (IST)
+                      </p>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={() => !expired && triggerDownload(job.id)}
+                      disabled={expired}
+                      variant={expired ? "secondary" : "default"}
+                      className="w-full rounded-lg text-xs"
+                    >
+                      <Download className="h-3.5 w-3.5 mr-1.5" /> {expired ? 'File Removed (Expired)' : 'Download Now'}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {failedJobs.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+              Failed Downloads
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {failedJobs.map(job => (
+                <div key={job.id} className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 flex flex-col gap-1">
+                  <p className="text-xs font-mono text-red-600/80 dark:text-red-400/80">ID: {job.id.substring(0,8)}...</p>
+                  <p className="text-sm font-medium text-red-700 dark:text-red-300">Export Failed</p>
+                  <p className="text-xs text-red-600/70 dark:text-red-400/70 line-clamp-2 mt-1">
+                    {job.errorMessage || 'Unknown error occurred'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       <Dialog open={showOtpDialog} onOpenChange={setShowOtpDialog}>
         <DialogContent className="max-w-md rounded-2xl p-6 bg-card border border-border">
           <DialogHeader className="flex flex-col items-center text-center">
@@ -357,7 +505,7 @@ export default function DownloadPage() {
             </div>
             <DialogTitle className="text-xl font-bold tracking-tight">Security Check Required</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground max-w-[320px] mt-1.5">
-              Two-factor protection is active. Enter the 6-digit code from Google Authenticator to authorize this ledger download.
+              Two-factor protection is active. Enter the 6-digit code from Google Authenticator to authorize this ledger access.
             </DialogDescription>
           </DialogHeader>
 
@@ -383,6 +531,7 @@ export default function DownloadPage() {
               onClick={() => {
                 setShowOtpDialog(false);
                 setPendingExport(null);
+                setPendingDownloadJobId(null);
               }}
               disabled={isVerifyingOtp}
               className="rounded-xl w-full sm:w-auto text-xs"
@@ -402,7 +551,7 @@ export default function DownloadPage() {
               ) : (
                 <>
                   <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                  Verify & Download
+                  Verify & Proceed
                 </>
               )}
             </Button>

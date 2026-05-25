@@ -35,29 +35,27 @@ axiosInstance.interceptors.response.use(
 
       switch (status) {
         case 401:
-          localStorage.removeItem("token");
-          localStorage.removeItem("export_token");
-          localStorage.removeItem("export_token_expires");
-          localStorage.removeItem("export_token_email");
+          localStorage.clear();
+          sessionStorage.clear();
           window.location.href = "/login";
-          toast.error("Session expired. Please login again.");
           break;
         case 403:
-          toast.error("Access denied");
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = "/login";
           break;
         case 500:
-          toast.error("Server error, please try again");
+        case 502:
+        case 503:
+        case 504:
+          toast.error("Server unavailable. Please try again later.");
           break;
         default:
           toast.error(message);
       }
     } else if (error.request) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("export_token");
-      localStorage.removeItem("export_token_expires");
-      localStorage.removeItem("export_token_email");
-      window.location.href = "/login";
-      toast.error("Connection lost. Local session terminated.");
+      // Network timeout or server unreachable
+      toast.error("Server unavailable. Please check your connection or try again later.");
     } else {
       toast.error(error.message || "An error occurred");
     }
