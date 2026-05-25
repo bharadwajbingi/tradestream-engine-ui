@@ -35,29 +35,27 @@ axiosInstance.interceptors.response.use(
 
       switch (status) {
         case 401:
-          localStorage.clear();
-          sessionStorage.clear();
-          window.location.href = "/login";
-          break;
         case 403:
-          localStorage.clear();
-          sessionStorage.clear();
-          window.location.href = "/login";
-          break;
         case 500:
         case 502:
         case 503:
         case 504:
-          toast.error("Server unavailable. Please try again later.");
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = "/login";
           break;
         default:
           toast.error(message);
       }
     } else if (error.request) {
       // Network timeout or server unreachable
-      toast.error("Server unavailable. Please check your connection or try again later.");
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = "/login";
     } else {
-      toast.error(error.message || "An error occurred");
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = "/login";
     }
 
     return Promise.reject(error);
